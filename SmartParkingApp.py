@@ -121,11 +121,9 @@ def main():
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
         duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2)
-        st.text(str(duration) + ' minutes')     
-        st.text("Testing") 
+        st.text(str(duration) + ' minutes')      
 
 #calling the main function
-#testing push
 main()
 
 
