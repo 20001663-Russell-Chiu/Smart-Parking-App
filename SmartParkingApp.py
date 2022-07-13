@@ -123,6 +123,7 @@ def main():
         duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2)
         st.text(str(duration) + ' minutes')      
 
+#calling the main function
 main()
 
 
