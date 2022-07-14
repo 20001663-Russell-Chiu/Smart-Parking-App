@@ -78,7 +78,7 @@ def main():
     effCharge = 0
     lotNumber = 0
     #Title of our app
-    st.title('HDB Smart Parking')
+    st.title('HDB Smart Parking App')
 
     #Display session start time
     utctimeNow = datetime.datetime.utcnow()
@@ -131,7 +131,6 @@ def main():
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
         duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2)
-        st.text(str(duration) + ' minutes')
 
         sessEnd = (epochCalc(endUTC)/60)
         sesStart = (epochCalc(utctimeNow)/60)
@@ -141,7 +140,7 @@ def main():
 
     featureList = [VehType, sesStart, sessEnd, totalCharge, duration, effCharge, lotNumber]
 
-    if(plateNo != '' and endTime != []):
+    if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
         if st.button('Predict'):
             pred = prediction(model, featureList)
             st.success(pred)
