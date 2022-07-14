@@ -18,7 +18,6 @@ def prediction(model, featureArray):
     ReshapedArray = toNParray.reshape(1,-1)
 
     finalPred = model.predict(ReshapedArray)
-    print(finalPred)
 
     if(finalPred[0] == 0):
         return 'Short term parking'
@@ -71,6 +70,13 @@ def timePicker():
     return endTime
 
 def main():
+    VehType = 0
+    sesStart = 0
+    sessEnd = 0
+    totalCharge = 0
+    duration = 0
+    effCharge = 0
+    lotNumber = 0
     #Title of our app
     st.title('HDB Smart Parking')
 
@@ -107,6 +113,11 @@ def main():
     elif(plateNo.startswith("G")):
         VehType = 2
 
+    lotNumber = random.randint(1,500)
+
+    totalCharge = 4 
+    effCharge = 0
+
 
     endDate = st.date_input("Select session end date: ")
 
@@ -121,19 +132,20 @@ def main():
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
         duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2)
         st.text(str(duration) + ' minutes')
-    
-    lotNumber = random.randint(1,500)
 
-    sessEnd = (epochCalc(endUTC)/60)
-    sesStart = (epochCalc(utctimeNow)/60)
+        sessEnd = (epochCalc(endUTC)/60)
+        sesStart = (epochCalc(utctimeNow)/60)
 
-    totalCharge = 0
-    effCharge = 0
+
+    pred = ''
 
     featureList = [VehType, sesStart, sessEnd, totalCharge, duration, effCharge, lotNumber]
-    if st.button('Predict'):
-        pred = prediction(model, featureList)
-    st.success(pred)
+
+    if(plateNo != '' and endTime != []):
+        if st.button('Predict'):
+            pred = prediction(model, featureList)
+            st.success(pred)
+
     
 
 #calling the main function
