@@ -4,4 +4,4 @@ seaborn
 matplotlib
 ipydatetime
 pipreqs
-sklearn
+scikit-learn
