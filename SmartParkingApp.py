@@ -5,6 +5,7 @@ import datetime
 import pytz
 import pickle
 import re
+import random
 
 epochTime = datetime.datetime(1970,1,1)
 
@@ -23,16 +24,6 @@ def prediction(model, featureArray):
         return 'Short term parking'
     else:
         return 'Seasonal parking'
-
-def body():
-    vehType = 0
-    startTime = 0
-    endTime = 0
-    totalCharge = 0
-    Duration = 0 
-    effectiveCharge = 0
-
-    featureList = [vehType,startTime, endTime, totalCharge, Duration, effectiveCharge]
 
 def regex(plateNo):
     pattern = "([SFG][^AIO][^IO\d]\d\d\d\d[^FINOQVW\W\d])$|([SFG][^AIO]\d\d\d\d[^FINOQVW\W\d])$"
@@ -81,7 +72,7 @@ def timePicker():
 
 def main():
     #Title of our app
-    st.title('HDB Smart Parking Page')
+    st.title('HDB Smart Parking')
 
     #Display session start time
     utctimeNow = datetime.datetime.utcnow()
@@ -108,11 +99,19 @@ def main():
         error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid License plate</p>'
         st.markdown(error, unsafe_allow_html=True)
 
+
+    if(plateNo.startswith("S")):
+        VehType = 0
+    elif(plateNo.startswith("F")):
+        VehType = 1
+    elif(plateNo.startswith("G")):
+        VehType = 2
+
+
     endDate = st.date_input("Select session end date: ")
 
     #Getting user input session end time
     endTime = timePicker()
-
     if len(endTime) != 0: 
         index1 = endTime[0]
         #timeSplit to split the hours and minutes
@@ -121,7 +120,21 @@ def main():
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
         duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2)
-        st.text(str(duration) + ' minutes')      
+        st.text(str(duration) + ' minutes')
+    
+    lotNumber = random.randint(1,500)
+
+    sessEnd = (epochCalc(endUTC)/60)
+    sesStart = (epochCalc(utctimeNow)/60)
+
+    totalCharge = 0
+    effCharge = 0
+
+    featureList = [VehType, sesStart, sessEnd, totalCharge, duration, effCharge, lotNumber]
+    if st.button('Predict'):
+        pred = prediction(model, featureList)
+    st.success(pred)
+    
 
 #calling the main function
 main()
