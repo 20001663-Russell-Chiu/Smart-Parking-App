@@ -190,6 +190,7 @@ def main():
     featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
 
     if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
+        st.text(duration)
         if st.button('Predict'):
             pred = prediction(model, featureList)
             st.success(pred)
