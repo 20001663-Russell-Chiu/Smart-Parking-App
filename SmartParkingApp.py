@@ -19,10 +19,11 @@ def prediction(model, featureArray):
 
     finalPred = model.predict(ReshapedArray)
 
+
     if(finalPred[0] == 0):
-        return 'Short term parking'
+        return 'Short term parking' 
     else:
-        return 'Seasonal parking'
+        return 'Seasonal parking' 
 
 def regex(plateNo):
     pattern = "([SFG][^AIO][^IO\d]\d\d\d\d[^FINOQVW\W\d])$|([SFG][^AIO]\d\d\d\d[^FINOQVW\W\d])$"
@@ -89,7 +90,7 @@ def main():
     #getting user input for which model to use
     option = st.selectbox(
      'What AI model would you like to use?',
-     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours'))
+     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest'))
      
     if(option == "Logistic Regression"):
         model = pickle.load(open('logreg.pkl', 'rb'))
@@ -97,7 +98,10 @@ def main():
         model = pickle.load(open('KNeighborsClassifier.pkl', 'rb'))
     elif(option == "SVC"):
         model = pickle.load(open('SVC.pkl', 'rb'))
-
+    elif(option == "SGD"):
+        model = pickle.load(open('SGDClassifier.pkl', 'rb'))
+    elif(option == "Random Forest"):
+        model = pickle.load(open('RandomForestClassifier.pkl', 'rb'))
 
     #Getting user input license plate
     plateNo = st.text_input('Please enter License plate number: ').upper()
@@ -115,7 +119,7 @@ def main():
 
     lotNumber = random.randint(1,500)
 
-    totalCharge = 4 
+    #totalCharge = 4 
     effCharge = 0
 
 
@@ -136,9 +140,14 @@ def main():
         sesStart = (epochCalc(utctimeNow)/60)
 
 
+    #To get an estimated charge amount from the user
+    estTotalCharge = st.text_input('Please enter estimated total charge: ')
+
+
+    #initializing the prediciton variable
     pred = ''
 
-    featureList = [VehType, sesStart, sessEnd, totalCharge, duration, effCharge, lotNumber]
+    featureList = [VehType, sesStart, sessEnd, estTotalCharge, duration, effCharge]
 
     if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
         if st.button('Predict'):
