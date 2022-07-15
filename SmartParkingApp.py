@@ -179,7 +179,9 @@ def main():
 
 
     #To get an estimated charge amount from the user
-    estTotalCharge = float(st.text_input('Please enter estimated total charge: '))
+    estTotalCharge = st.text_input('Please enter estimated total charge: ')
+    if(estTotalCharge != ''):
+        intCharge = float(estTotalCharge)
 
     #initializing the prediciton variable
     pred = ''
