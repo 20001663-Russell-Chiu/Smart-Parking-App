@@ -136,7 +136,7 @@ def main():
     #Display session start time
     utctimeNow = datetime.datetime.utcnow()
     timeNow = datetime.datetime.now()
-    new_title = '<p style="font-family:sans-serif; color:Green; font-size: 12px;">' + 'Session start time: ' + str(timeNow.strftime("%Y/%m/%d, %H:%M")) + '</p>'
+    new_title = '<p style="font-family:sans-serif; color:Green; font-size: 12px;">' + 'Session start time: ' + str(datetime.datetime.now().strftime("%Y/%m/%d, %H:%M")) + '</p>'
     st.markdown(new_title, unsafe_allow_html=True)
 
     #getting user input for which model to use
