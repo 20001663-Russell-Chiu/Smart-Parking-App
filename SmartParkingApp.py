@@ -7,6 +7,7 @@ import pickle
 import re
 import random
 import xgboost
+from sklearn.metrics import accuracy_score
 
 epochTime = datetime.datetime(1970,1,1)
 
@@ -33,7 +34,7 @@ def modelSelect():
      ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes'))
      
     if(option == "XGBoost - Default"):
-        model = pickle.load(open('XGBoost.pkl', 'rb'))
+        model = pickle.load(open('XGBoost_pkl_Latest2.pkl', 'rb'))
         return model
 
     elif(option == "K-nearest neighbours"):
@@ -57,7 +58,7 @@ def modelSelect():
         return model
 
     elif(option == "Naive Bayes"):
-        model = pickle.load(open('NaiveBayes_pkl_Latest', 'rb'))
+        model = pickle.load(open('NaiveBayes_pkl_Latest2.pkl', 'rb'))
         return model
     
 
