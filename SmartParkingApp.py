@@ -4,23 +4,25 @@ import sklearn
 import datetime
 import pytz
 import pickle
-import re
+import re # for regex
 import random
-import xgboost
+
+from numpy import loadtxt
+from xgboost import XGBClassifier
+import xgboost as xgb
+
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
+from sklearn import ensemble
 
 epochTime = datetime.datetime(1970,1,1)
 
 #def prediction(model, VehType, startTime, endTime, totalCharge, Duration, effectiveCharge):
 def prediction(model, featureArray):
-
-    #Converting features to an NP array to be used in the model
     toNParray = np.asarray(featureArray)
-
     ReshapedArray = toNParray.reshape(1,-1)
 
     finalPred = model.predict(ReshapedArray)
-
 
     if(finalPred[0] == 0):
         return 'Short term parking' 
@@ -34,7 +36,8 @@ def modelSelect():
      ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes'))
      
     if(option == "XGBoost - Default"):
-        model = pickle.load(open('XGBoost_pkl_Latest2.pkl', 'rb'))
+        model = xgb.XGBClassifier()
+        model.load_model('model.txt')
         return model
 
     elif(option == "K-nearest neighbours"):
