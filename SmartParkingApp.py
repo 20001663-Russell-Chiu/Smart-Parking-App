@@ -6,6 +6,7 @@ import pytz
 import pickle
 import re
 import random
+import xgboost
 
 epochTime = datetime.datetime(1970,1,1)
 
@@ -90,18 +91,29 @@ def main():
     #getting user input for which model to use
     option = st.selectbox(
      'What AI model would you like to use?',
-     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest'))
+     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes'))
      
-    if(option == "Logistic Regression"):
-        model = pickle.load(open('logreg.pkl', 'rb'))
+    if(option == "XGBoost - Default"):
+        model = pickle.load(open('XGBoost.pkl', 'rb'))
+
     elif(option == "K-nearest neighbours"):
         model = pickle.load(open('KNeighborsClassifier.pkl', 'rb'))
+
     elif(option == "SVC"):
         model = pickle.load(open('SVC.pkl', 'rb'))
+
     elif(option == "SGD"):
         model = pickle.load(open('SGDClassifier.pkl', 'rb'))
+
     elif(option == "Random Forest"):
         model = pickle.load(open('RandomForestClassifier.pkl', 'rb'))
+
+    elif(option == "Logistic Regression"):
+        model = pickle.load(open('logreg.pkl', 'rb')) 
+
+    elif(option == "Naive Bayes"):
+        model = pickle.load(open('NaiveBayes_pkl_Latest', 'rb'))
+        
 
     #Getting user input license plate
     plateNo = st.text_input('Please enter License plate number: ').upper()
