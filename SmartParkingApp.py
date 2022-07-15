@@ -34,12 +34,14 @@ def modelSelect():
     #getting user input for which model to use
     option = st.selectbox(
      'What AI model would you like to use?',
-     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes'))
+     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes', 'MLP', 'Decision Tree'))
      
     if(option == "XGBoost - Default"):
         model = xgb.XGBClassifier()
         model.load_model('model.txt')
+
         return model
+        
 
     elif(option == "K-nearest neighbours"):
         model = pickle.load(open('KNeighborsClassifier.pkl', 'rb'))
@@ -63,6 +65,14 @@ def modelSelect():
 
     elif(option == "Naive Bayes"):
         model = pickle.load(open('NaiveBayes_pkl_Latest2.pkl', 'rb'))
+        return model
+
+    elif(option == "Decision Tree"):
+        model = pickle.load(open('DecisionTree_pkl_latest.pkl', 'rb'))
+        return model
+    
+    elif(option == "MLP"):
+        model = pickle.load(open('MLP_pkl_latest', 'rb'))
         return model
     
 
@@ -125,7 +135,7 @@ def main():
     #Display session start time
     utctimeNow = datetime.datetime.utcnow()
     timeNow = datetime.datetime.now()
-    new_title = '<p style="font-family:sans-serif; color:Green; font-size: 12px;">' + 'Session start time: ' + timeNow.strftime("%Y-%m-%d %H:%M") + '</p>'
+    new_title = '<p style="font-family:sans-serif; color:Green; font-size: 12px;">' + 'Session start time: ' + str(timeNow.strftime("%Y/%m/%d, %H:%M")) + '</p>'
     st.markdown(new_title, unsafe_allow_html=True)
 
     #getting user input for which model to use
@@ -170,15 +180,14 @@ def main():
 
     #To get an estimated charge amount from the user
     estTotalCharge = st.text_input('Please enter estimated total charge: ')
-
+    intCharge = int(estTotalCharge)
 
     #initializing the prediciton variable
     pred = ''
 
-    featureList = [VehType, sesStart, sessEnd, estTotalCharge, duration, effCharge]
+    featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
 
     if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
-        st.text(xgb.__version__)
         if st.button('Predict'):
             pred = prediction(model, featureList)
             st.success(pred)
