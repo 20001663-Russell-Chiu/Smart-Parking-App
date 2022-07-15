@@ -24,7 +24,42 @@ def prediction(model, featureArray):
     if(finalPred[0] == 0):
         return 'Short term parking' 
     else:
-        return 'Seasonal parking' 
+        return 'Seasonal parking'
+
+def modelSelect():
+    #getting user input for which model to use
+    option = st.selectbox(
+     'What AI model would you like to use?',
+     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes'))
+     
+    if(option == "XGBoost - Default"):
+        model = pickle.load(open('XGBoost.pkl', 'rb'))
+        return model
+
+    elif(option == "K-nearest neighbours"):
+        model = pickle.load(open('KNeighborsClassifier.pkl', 'rb'))
+        return model
+
+    elif(option == "SVC"):
+        model = pickle.load(open('SVC.pkl', 'rb'))
+        return model
+
+    elif(option == "SGD"):
+        model = pickle.load(open('SGDClassifier.pkl', 'rb'))
+        return model
+
+    elif(option == "Random Forest"):
+        model = pickle.load(open('RandomForestClassifier.pkl', 'rb'))
+        return model
+
+    elif(option == "Logistic Regression"):
+        model = pickle.load(open('logreg.pkl', 'rb')) 
+        return model
+
+    elif(option == "Naive Bayes"):
+        model = pickle.load(open('NaiveBayes_pkl_Latest', 'rb'))
+        return model
+    
 
 def regex(plateNo):
     pattern = "([SFG][^AIO][^IO\d]\d\d\d\d[^FINOQVW\W\d])$|([SFG][^AIO]\d\d\d\d[^FINOQVW\W\d])$"
@@ -89,31 +124,7 @@ def main():
     st.markdown(new_title, unsafe_allow_html=True)
 
     #getting user input for which model to use
-    option = st.selectbox(
-     'What AI model would you like to use?',
-     ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes'))
-     
-    if(option == "XGBoost - Default"):
-        model = pickle.load(open('XGBoost.pkl', 'rb'))
-
-    elif(option == "K-nearest neighbours"):
-        model = pickle.load(open('KNeighborsClassifier.pkl', 'rb'))
-
-    elif(option == "SVC"):
-        model = pickle.load(open('SVC.pkl', 'rb'))
-
-    elif(option == "SGD"):
-        model = pickle.load(open('SGDClassifier.pkl', 'rb'))
-
-    elif(option == "Random Forest"):
-        model = pickle.load(open('RandomForestClassifier.pkl', 'rb'))
-
-    elif(option == "Logistic Regression"):
-        model = pickle.load(open('logreg.pkl', 'rb')) 
-
-    elif(option == "Naive Bayes"):
-        model = pickle.load(open('NaiveBayes_pkl_Latest', 'rb'))
-        
+    model = modelSelect()
 
     #Getting user input license plate
     plateNo = st.text_input('Please enter License plate number: ').upper()
