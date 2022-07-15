@@ -173,7 +173,9 @@ def main():
         dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(timeSplit[0]), int(timeSplit[1]))
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
-        duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2)
+        #If using web hosted app, use duration hosted, if using app on local host, use code for local host
+        #duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
+        duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2)
 
         sessEnd = (epochCalc(endUTC)/60)
         sesStart = (epochCalc(utctimeNow)/60)
