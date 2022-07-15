@@ -129,6 +129,7 @@ def main():
     duration = 0
     effCharge = 0
     lotNumber = 0
+    intCharge = 0
     #Title of our app
     st.title('HDB Smart Parking App')
 
