@@ -11,6 +11,7 @@ from numpy import loadtxt
 from xgboost import XGBClassifier
 import xgboost as xgb
 
+
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from sklearn import ensemble
@@ -177,6 +178,7 @@ def main():
     featureList = [VehType, sesStart, sessEnd, estTotalCharge, duration, effCharge]
 
     if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
+        st.text(xgb.__version__)
         if st.button('Predict'):
             pred = prediction(model, featureList)
             st.success(pred)
