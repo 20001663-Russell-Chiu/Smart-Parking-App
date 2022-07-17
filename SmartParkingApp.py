@@ -107,6 +107,7 @@ def convert_datetime_timezone(dt, tz1, tz2):
 
     return dt
 
+#timePicker() function is a custom timepicker for 10 minute intervals instead of the usual 15 minute intervals which is in st.time_input function
 def timePicker():
     start = "00:00"
     end = "23:50"
@@ -122,80 +123,97 @@ def timePicker():
     return endTime
 
 def main():
-    VehType = 0
-    sesStart = 0
-    sessEnd = 0
-    totalCharge = 0
-    duration = 0
-    effCharge = 0
-    lotNumber = 0
-    intCharge = 0
-    #Title of our app
-    st.title('HDB Smart Parking App')
+    #sidebar code
+    nav = st.sidebar.radio("Navigation",["Home","More info about models"])
 
-    #Display session start time
-    utctimeNow = datetime.datetime.utcnow()
-    timeNow = datetime.datetime.now()
-    new_title = '<p style="font-family:sans-serif; color:Green; font-size: 12px;">' + 'Session start time: ' + str(datetime.datetime.now().strftime("%Y/%m/%d, %H:%M")) + '</p>'
-    st.markdown(new_title, unsafe_allow_html=True)
-
-    #getting user input for which model to use
-    model = modelSelect()
-
-    #Getting user input license plate
-    plateNo = st.text_input('Please enter License plate number: ').upper()
-    if(plateNo != "" and regex(plateNo) == 'Invalid'):
-        error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid License plate</p>'
-        st.markdown(error, unsafe_allow_html=True)
-
-
-    if(plateNo.startswith("S")):
+    if(nav == "Home"):
         VehType = 0
-    elif(plateNo.startswith("F")):
-        VehType = 1
-    elif(plateNo.startswith("G")):
-        VehType = 2
+        sesStart = 0
+        sessEnd = 0
+        totalCharge = 0
+        duration = 0
+        effCharge = 0
+        lotNumber = 0
+        intCharge = 0
+        #Title of our app
+        st.title('HDB Smart Parking App')
 
-    lotNumber = random.randint(1,500)
+        #Display session start time
+        utctimeNow = datetime.datetime.utcnow()
+        timeNow = datetime.datetime.now()
+        new_title = '<p style="font-family:sans-serif; color:Green; font-size: 12px;">' + 'Session start time: ' + str(datetime.datetime.now().strftime("%Y/%m/%d, %H:%M")) + '</p>'
+        st.markdown(new_title, unsafe_allow_html=True)
 
-    #totalCharge = 4 
-    effCharge = 0
+        #getting user input for which model to use
+        model = modelSelect()
+
+        #Getting user input license plate
+        plateNo = st.text_input('Please enter License plate number: ').upper()
+        if(plateNo != "" and regex(plateNo) == 'Invalid'):
+            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid License plate</p>'
+            st.markdown(error, unsafe_allow_html=True)
 
 
-    endDate = st.date_input("Select session end date: ")
+        if(plateNo.startswith("S")):
+            VehType = 0
+        elif(plateNo.startswith("F")):
+            VehType = 1
+        elif(plateNo.startswith("G")):
+            VehType = 2
 
-    #Getting user input session end time
-    endTime = timePicker()
-    if len(endTime) != 0: 
-        index1 = endTime[0]
-        #timeSplit to split the hours and minutes
-        timeSplit = index1.split(':')
-        dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(timeSplit[0]), int(timeSplit[1]))
+        lotNumber = random.randint(1,500)
+
+        #totalCharge = 4 
+        effCharge = 0
+
+
+        endDate = st.date_input("Select session end date: ")
+
+        #Getting user input session end time
+        endTime = st.time_input("Please enter session end time: ")
+
+        #Line 170 to 183 if using the timePicker() function
+        # if len(endTime) != 0: 
+        #     index1 = endTime[0]
+        #     #timeSplit to split the hours and minutes
+        #     timeSplit = index1.split(':')
+        #     dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(timeSplit[0]), int(timeSplit[1]))
+        #     convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
+        #     endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
+        #     #If using web hosted app, use code for deployed webapp, if using app on local host, use code for local host
+        #     duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
+        #     duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
+
+        #     sessEnd = (epochCalc(endUTC)/60)
+        #     sesStart = (epochCalc(utctimeNow)/60)
+
+        dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(endTime.hour), int(endTime.minute))
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
-        #If using web hosted app, use duration hosted, if using app on local host, use code for local host
-        #duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
-        duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2)
-
-        sessEnd = (epochCalc(endUTC)/60)
-        sesStart = (epochCalc(utctimeNow)/60)
+        duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
 
 
-    #To get an estimated charge amount from the user
-    estTotalCharge = st.text_input('Please enter estimated total charge: ')
-    if(estTotalCharge != ''):
-        intCharge = float(estTotalCharge)
+        #To get an estimated charge amount from the user
+        estTotalCharge = st.text_input('Please enter estimated total charge: ')
+        if(estTotalCharge != ''):
+            intCharge = float(estTotalCharge)
 
-    #initializing the prediciton variable
-    pred = ''
+        #initializing the prediciton variable
+        pred = ''
 
-    featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
+        featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
 
-    if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
-        st.text(duration)
-        if st.button('Predict'):
-            pred = prediction(model, featureList)
-            st.success(pred)
+        if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
+            st.text(duration)
+            if st.button('Predict'):
+                pred = prediction(model, featureList)
+                st.success(pred)
+                
+    elif(nav == "More info about models"):
+        st.text("Test")
+
+
+
 
     
 
