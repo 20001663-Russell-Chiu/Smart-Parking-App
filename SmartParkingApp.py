@@ -161,12 +161,14 @@ def main():
         elif(plateNo.startswith("G")):
             VehType = 2
 
+
+        #Unused variable to randomly assign user a lot number for prediction purposes
         lotNumber = random.randint(1,500)
 
         #totalCharge = 4 
         effCharge = 0
 
-
+        #user input for end session date
         endDate = st.date_input("Select session end date: ")
 
         #Getting user input session end time
@@ -190,7 +192,7 @@ def main():
         dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(endTime.hour), int(endTime.minute))
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
-        duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
+        duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
 
 
         #To get an estimated charge amount from the user
@@ -208,14 +210,38 @@ def main():
             if st.button('Predict'):
                 pred = prediction(model, featureList)
                 st.success(pred)
-                
+
     elif(nav == "More info about models"):
-        st.text("Test")
+        learnMore = st.selectbox(
+     'What AI model would you like to learn more about?',
+     ('XGBoost', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes', 'MLP', 'Decision Tree'))
 
+        if(learnMore == "XGBoost"):
+            st.text("lorem ipsum for XGBoost")
+        
+        elif(learnMore == "Logistic Regression"):
+            st.text("lorem ipsum for Logistic Regression")
 
+        elif(learnMore == "K-nearest neighbours"):
+            st.text("lorem ipsum for K-nearest neighbours")
 
+        elif(learnMore == "SVC"):
+            st.text("lorem ipsum for SVC")
 
-    
+        elif(learnMore == "SGD"):
+            st.text("lorem ipsum for SGD")
+
+        elif(learnMore == "Random Forest"):
+            st.text("lorem ipsum for Random Forest")
+
+        elif(learnMore == "Naive Bayes"):
+            st.text("lorem ipsum for Naive Bayes")
+
+        elif(learnMore == "MLP"):
+            st.text("lorem ipsum for MLP")
+        
+        elif(learnMore == "Decision Tree"):
+            st.text("lorem ipsum for Decision Tree")
 
 #calling the main function
 main()
