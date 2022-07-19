@@ -7,7 +7,8 @@ import pickle
 import re # for regex
 import random
 
-from numpy import loadtxt
+from numpy import intc, loadtxt
+from sympy import DiracDelta
 from xgboost import XGBClassifier
 import xgboost as xgb
 
@@ -26,6 +27,7 @@ def prediction(model, featureArray):
     finalPred = model.predict(ReshapedArray)
 
     if(finalPred[0] == 0):
+        print(finalPred[0])
         return 'Short term parking' 
     else:
         return 'Seasonal parking'
@@ -165,9 +167,6 @@ def main():
         #Unused variable to randomly assign user a lot number for prediction purposes
         lotNumber = random.randint(1,500)
 
-        #totalCharge = 4 
-        effCharge = 0
-
         #user input for end session date
         endDate = st.date_input("Select session end date: ")
 
@@ -186,30 +185,37 @@ def main():
         #     duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
         #     duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
 
-        #     sessEnd = (epochCalc(endUTC)/60)
-        #     sesStart = (epochCalc(utctimeNow)/60)
 
         dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(endTime.hour), int(endTime.minute))
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
-        duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
 
+        #Calculate duration
+        duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
+
+        #Calculate session start and end in minutes since Epoch
+        sessEnd = round((epochCalc(endUTC)/60),2)
+        sesStart = round((epochCalc(utctimeNow)/60),2)
 
         #To get an estimated charge amount from the user
         estTotalCharge = st.text_input('Please enter estimated total charge: ')
         if(estTotalCharge != ''):
             intCharge = float(estTotalCharge)
 
+        #totalCharge = 4 
+        effCharge = intCharge
+
         #initializing the prediciton variable
         pred = ''
 
         featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
+        
 
         if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
-            st.text(duration)
             if st.button('Predict'):
                 pred = prediction(model, featureList)
                 st.success(pred)
+                st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
 
     elif(nav == "More info about models"):
         learnMore = st.selectbox(
