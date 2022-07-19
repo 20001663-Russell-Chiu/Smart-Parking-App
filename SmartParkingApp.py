@@ -8,7 +8,6 @@ import re # for regex
 import random
 
 from numpy import intc, loadtxt
-from sympy import DiracDelta
 from xgboost import XGBClassifier
 import xgboost as xgb
 
