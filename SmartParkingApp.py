@@ -7,7 +7,6 @@ import pickle
 import re # for regex
 import random
 
-from numpy import intc, loadtxt
 from xgboost import XGBClassifier
 import xgboost as xgb
 
@@ -61,7 +60,7 @@ def modelSelect():
         return model
 
     elif(option == "Logistic Regression"):
-        model = pickle.load(open('logreg.pkl', 'rb')) 
+        model = pickle.load(open('logreg.p  kl', 'rb')) 
         return model
 
     elif(option == "Naive Bayes"):
@@ -180,10 +179,6 @@ def main():
         #     dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(timeSplit[0]), int(timeSplit[1]))
         #     convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         #     endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
-        #     #If using web hosted app, use code for deployed webapp, if using app on local host, use code for local host
-        #     duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
-        #     duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
-
 
         #Creating a datetime object by combining endDate and endTime variables
         dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(endTime.hour), int(endTime.minute))
@@ -193,6 +188,8 @@ def main():
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
 
         #Calculate duration
+        #If using web hosted app, use code for deployed webapp, if using app on local host, use code for local host
+        #duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
         duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
 
         #Calculate session start and end in minutes since Epoch
