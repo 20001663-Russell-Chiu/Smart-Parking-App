@@ -60,7 +60,7 @@ def modelSelect():
         return model
 
     elif(option == "Logistic Regression"):
-        model = pickle.load(open('logreg.p  kl', 'rb')) 
+        model = pickle.load(open('logreg.pkl', 'rb')) 
         return model
 
     elif(option == "Naive Bayes"):
