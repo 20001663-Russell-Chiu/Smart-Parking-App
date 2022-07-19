@@ -186,7 +186,10 @@ def main():
         #     duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
 
 
+        #Creating a datetime object by combining endDate and endTime variables
         dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(endTime.hour), int(endTime.minute))
+        
+        #Converting local timezone to UTC time zone - only needed for local host 
         convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
         endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
 
