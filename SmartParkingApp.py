@@ -149,8 +149,14 @@ def main():
 
         #Calculate duration
         duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
-        hours = duration/60
-        st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
+        validDuration = True
+        if(duration < 0):
+            validDuration = False
+            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
+            st.markdown(error, unsafe_allow_html=True)
+        else:
+            hours = duration/60
+            st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
         #Calculate session start and end in minutes since Epoch
 
 
@@ -168,12 +174,12 @@ def main():
         featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
         
 
-        if(plateNo != '' and  regex(plateNo) != 'Invalid'):
-            if st.button('Predict'):
+        if(plateNo != '' and  regex(plateNo) != 'Invalid' and validDuration == True):
+            if(st.button('Predict',disabled=False)):
                 pred = prediction(model, featureList)
                 st.success(pred)
                 #st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
-                
+                    
                 if(pred == 'Short term parking'):
                     lotNumber =  random.randint(161,480)
                 elif(pred == 'Seasonal parking'):
@@ -181,7 +187,13 @@ def main():
                 elif(VehType == 1):
                     lotNumber =  random.randint(481,500)
                 st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber))
+        else:
+            st.button('Predict',disabled=True)
         
+
+
+
+
 
     elif(nav == "Payment"):
         learnMore = st.selectbox(
