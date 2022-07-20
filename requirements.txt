@@ -4,5 +4,5 @@ seaborn
 matplotlib
 ipydatetime
 pipreqs
-scikit-learn
+scikit-learn==1.1.1
 xgboost<=1.5.0

@@ -162,7 +162,6 @@ def main():
         intCharge = 0
         effCharge = intCharge
 
-
         #initializing the prediciton variable
         pred = ''
 
