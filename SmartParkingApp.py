@@ -77,7 +77,7 @@ def modelSelect():
     
 
 def regex(plateNo):
-    pattern = "([SFG][^AIO][^IO\d]\d\d\d\d[^FINOQVW\W\d])$|([SFG][^AIO]\d\d\d\d[^FINOQVW\W\d])$"
+    pattern = "([SFG][^AIO][^IO\d]\d\d\d\d[^FINOQVW\W\d])$|([SFG][^AIO]\d\d\d\d[^FINOQVW\W\d])$|(J[^AIO]\d\d\d\d)$|(J[^AIO][^AIO]\d\d\d\d)$"
     if(re.search(pattern, plateNo)):
         return 'Valid'
     else:   
@@ -107,24 +107,9 @@ def convert_datetime_timezone(dt, tz1, tz2):
 
     return dt
 
-#timePicker() function is a custom timepicker for 10 minute intervals instead of the usual 15 minute intervals which is in st.time_input function
-def timePicker():
-    start = "00:00"
-    end = "23:50"
-    times = []
-    start = now = datetime.datetime.strptime(start, "%H:%M")
-    end = datetime.datetime.strptime(end, "%H:%M")
-    while now != end:
-        times.append(str(now.strftime("%H:%M")))
-        now += datetime.timedelta(minutes=10)
-    times.append(end.strftime("%H:%M"))
-    endTime = st.multiselect('Input session end time:',times)
-
-    return endTime
-
 def main():
     #sidebar code
-    nav = st.sidebar.radio("Navigation",["Home","More info about models"])
+    nav = st.sidebar.radio("Navigation",["Home",""])
 
     if(nav == "Home"):
         VehType = 0
@@ -154,55 +139,29 @@ def main():
             st.markdown(error, unsafe_allow_html=True)
 
 
-        if(plateNo.startswith("S")):
+        if(plateNo.startswith("S" or "J")):
             VehType = 0
         elif(plateNo.startswith("F")):
             VehType = 1
         elif(plateNo.startswith("G")):
             VehType = 2
-
-
-        #Unused variable to randomly assign user a lot number for prediction purposes
-        lotNumber = random.randint(1,500)
-
-        #user input for end session date
-        endDate = st.date_input("Select session end date: ")
-
-        #Getting user input session end time
-        endTime = st.time_input("Please enter session end time: ")
-
-        #Line 170 to 183 if using the timePicker() function
-        # if len(endTime) != 0: 
-        #     index1 = endTime[0]
-        #     #timeSplit to split the hours and minutes
-        #     timeSplit = index1.split(':')
-        #     dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(timeSplit[0]), int(timeSplit[1]))
-        #     convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
-        #     endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
-
-        #Creating a datetime object by combining endDate and endTime variables
-        dateTime = datetime.datetime(int(endDate.year), int(endDate.month), int(endDate.day), int(endTime.hour), int(endTime.minute))
-        
-        #Converting local timezone to UTC time zone - only needed for local host 
-        convertedStrUTC = convert_datetime_timezone(str(dateTime),'Singapore','UTC')
-        endUTC = datetime.datetime.strptime(convertedStrUTC,"%Y-%m-%d %H:%M:%S")
+       
 
         #Calculate duration
-        #If using web hosted app, use code for deployed webapp, if using app on local host, use code for local host
-        #duration = round((epochCalc(dateTime) - epochCalc(utctimeNow)) /60,2) #code for deployed webapp
-        duration = round((epochCalc(endUTC) - epochCalc(utctimeNow)) /60,2) #code for local host
-
+        duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
+        hours = duration/60
+        st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
         #Calculate session start and end in minutes since Epoch
-        sessEnd = round((epochCalc(endUTC)/60),2)
+
+
         sesStart = round((epochCalc(utctimeNow)/60),2)
+        sessEnd = duration + sesStart
+        
+        SessEndDate = datetime.datetime.fromtimestamp((sessEnd*60))
 
-        #To get an estimated charge amount from the user
-        estTotalCharge = st.text_input('Please enter estimated total charge: ')
-        if(estTotalCharge != ''):
-            intCharge = float(estTotalCharge)
-
-        #totalCharge = 4 
+        intCharge = 0
         effCharge = intCharge
+
 
         #initializing the prediciton variable
         pred = ''
@@ -210,13 +169,22 @@ def main():
         featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
         
 
-        if(plateNo != '' and  regex(plateNo) != 'Invalid' and endTime != []):
+        if(plateNo != '' and  regex(plateNo) != 'Invalid'):
             if st.button('Predict'):
                 pred = prediction(model, featureList)
                 st.success(pred)
-                st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
+                #st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
+                
+                if(pred == 'Short term parking'):
+                    lotNumber =  random.randint(161,480)
+                elif(pred == 'Seasonal parking'):
+                    lotNumber =  random.randint(1,161)
+                elif(VehType == 1):
+                    lotNumber =  random.randint(481,500)
+                st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber))
+        
 
-    elif(nav == "More info about models"):
+    elif(nav == "Payment"):
         learnMore = st.selectbox(
      'What AI model would you like to learn more about?',
      ('XGBoost', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes', 'MLP', 'Decision Tree'))
