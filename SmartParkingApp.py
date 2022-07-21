@@ -15,6 +15,9 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from sklearn import ensemble
 
+# Importing built-in library for SQLite functionality
+import sqlite3 as sql
+
 epochTime = datetime.datetime(1970,1,1)
 
 #def prediction(model, VehType, startTime, endTime, totalCharge, Duration, effectiveCharge):
@@ -108,6 +111,45 @@ def convert_datetime_timezone(dt, tz1, tz2):
     return dt
 
 def main():
+    # Establishing name of database
+    database_name = 'parking.db'
+
+    # Checks if database is created, then creates table. Should be called after
+    def check_db(): # Progress: Complete
+        # Creates a parking.db file if it does not exist, otherwise accesses it if exists
+        connection = sql.connect(database_name) 
+        
+        # Create a cursor object to access table
+        # Note: All SQL commands are done with the cursor object.
+        cur = con.cursor()
+
+        # Creating table if table does not exist
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS sessions(
+        license_number VARCHAR(25),
+        session_start DATETIME,
+        session_end DATETIME,
+        lot_number INT(500)
+        );
+        """)
+        con.commit()
+        con.close()
+
+    # Takes in user's plate number and finds any records in the database containing that plate number
+    def get_previous_sessions(plate_number): # Progress: WIP
+         # Creates a parking.db file if it does not exist, otherwise accesses it if exists
+        connection = sql.connect(database_name) 
+        
+        # Create a cursor object to access table
+        # Note: All SQL commands are done with the cursor object.
+        cur = con.cursor()
+        
+        # Getting previous sessions
+        
+
+        con.commit()
+        con.close()       
+
     #sidebar code
     nav = st.sidebar.radio("Navigation",["Home",""])
 
@@ -175,6 +217,9 @@ def main():
         
 
         if(plateNo != '' and  regex(plateNo) != 'Invalid' and validDuration == True):
+            # Connecting to database
+            # prev_session = get_previous_sessions(plateNo) # Uncomment once get_previous_sessions() function is complete
+        
             if(st.button('Predict',disabled=False)):
                 pred = prediction(model, featureList)
                 st.success(pred)
