@@ -23,7 +23,7 @@ def check_db(): # Progress: Complete
     con.close()
 
 # Takes in user's plate number and finds any records in the database containing that plate number
-def get_previous_sessions(plate_number): # Progress: WIP
+def get_previous_sessions(plate_number): # Progress: Complete
      # Creates a parking.db file if it does not exist, otherwise accesses it if exists
     connection = sql.connect(database_name) 
     
@@ -32,7 +32,11 @@ def get_previous_sessions(plate_number): # Progress: WIP
     cur = con.cursor()
     
     # Getting previous sessions
+    cur.execute("SELECT * FROM sessions WHERE license_number == ?", (plate_number))
     
+    prev_sessions = cur.fetchall()
 
     con.commit()
-    con.close()    
+    con.close()
+    
+    return prev_sessions
