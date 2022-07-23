@@ -9,7 +9,7 @@ Checks if database is created, then creates table.
 Should be called at the start of the main() function.
 '''
 def check_db(): # Progress: Complete
-    if os.path.isfile(database_name):
+    if not os.path.isfile(database_name):
         # Creates a parking.db file if it does not exist, otherwise accesses it if exists
         con = sql.connect(database_name)
         
