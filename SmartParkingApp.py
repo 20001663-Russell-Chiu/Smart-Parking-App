@@ -94,28 +94,22 @@ def epochCalc(dateTime):
     daySeconds = intDaysEpoch * 3600 * 24
     #Finding the total seconds, adding up the seconds in days and the time seconds the user had to input
     inSeconds = daySeconds + endEpoch.seconds
+    print(endEpoch)
     return inSeconds
 
-def convert_datetime_timezone(dt, tz1, tz2):
-    tz1 = pytz.timezone(tz1)
-    tz2 = pytz.timezone(tz2)
-
-    dt = datetime.datetime.strptime(dt,"%Y-%m-%d %H:%M:%S")
-    dt = tz1.localize(dt)
-    dt = dt.astimezone(tz2)
-    dt = dt.strftime("%Y-%m-%d %H:%M:%S")
-
-    return dt
+def time_in_range(start, end, current):
+    #Returns whether current is in the range [start, end]
+    return start <= current <= end 
 
 def main():
     #sidebar code
-    nav = st.sidebar.radio("Navigation",["Home",""])
+    nav = st.sidebar.radio("Navigation",["Home","History"])
 
     if(nav == "Home"):
         VehType = 0
         sesStart = 0
         sessEnd = 0
-        totalCharge = 0
+        intCharge = 0
         duration = 0
         effCharge = 0
         lotNumber = 0
@@ -139,13 +133,7 @@ def main():
             st.markdown(error, unsafe_allow_html=True)
 
 
-        if(plateNo.startswith("S" or "J")):
-            VehType = 0
-        elif(plateNo.startswith("F")):
-            VehType = 1
-        elif(plateNo.startswith("G")):
-            VehType = 2
-       
+
 
         #Calculate duration
         duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
@@ -157,15 +145,37 @@ def main():
         else:
             hours = duration/60
             st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
+
         #Calculate session start and end in minutes since Epoch
-
-
         sesStart = round((epochCalc(utctimeNow)/60),2)
         sessEnd = duration + sesStart
         
         SessEndDate = datetime.datetime.fromtimestamp((sessEnd*60))
 
-        intCharge = 0
+        if(plateNo.startswith("S" or "J")):
+            VehType = 0
+            intCharge = 0.6 * int((duration/30))
+
+        elif(plateNo.startswith("F")):
+            VehType = 1
+            start = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,7,0,0)
+            end = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
+
+            #Night time charge range
+            startNight = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
+            endNight = datetime.datetime(timeNow.year, timeNow.month, (timeNow.day + 1),7,0,0)
+
+            #If session start time and session end date is within both day and night time periods, the fee will be $1.2
+            if(time_in_range(start,end, timeNow) and time_in_range(startNight,endNight, SessEndDate)):
+                intCharge += 1.2
+            #If the session starts in the day but ends before night time, the fee will be $0.65 and vice versa
+            elif(time_in_range(start,end, timeNow) or time_in_range(startNight,endNight, SessEndDate)):
+                intCharge += 0.65
+
+        elif(plateNo.startswith("G")):
+            VehType = 2
+            intCharge = 1.2 * int((duration/30))        
+
         effCharge = intCharge
 
         #initializing the prediciton variable
@@ -179,54 +189,24 @@ def main():
                 pred = prediction(model, featureList)
                 st.success(pred)
                 #st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
-                    
+                
+                #Depending on model prediction, will assign a lot number to user
                 if(pred == 'Short term parking'):
                     lotNumber =  random.randint(161,480)
                 elif(pred == 'Seasonal parking'):
                     lotNumber =  random.randint(1,161)
                 elif(VehType == 1):
                     lotNumber =  random.randint(481,500)
-                st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber))
+                
+                #Displaying lot number and session information for user
+                st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber) + "\nTotal cost: $" + str(effCharge))
         else:
             st.button('Predict',disabled=True)
         
 
 
-
-
-
-    elif(nav == "Payment"):
-        learnMore = st.selectbox(
-     'What AI model would you like to learn more about?',
-     ('XGBoost', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes', 'MLP', 'Decision Tree'))
-
-        if(learnMore == "XGBoost"):
-            st.text("lorem ipsum for XGBoost")
-        
-        elif(learnMore == "Logistic Regression"):
-            st.text("lorem ipsum for Logistic Regression")
-
-        elif(learnMore == "K-nearest neighbours"):
-            st.text("lorem ipsum for K-nearest neighbours")
-
-        elif(learnMore == "SVC"):
-            st.text("lorem ipsum for SVC")
-
-        elif(learnMore == "SGD"):
-            st.text("lorem ipsum for SGD")
-
-        elif(learnMore == "Random Forest"):
-            st.text("lorem ipsum for Random Forest")
-
-        elif(learnMore == "Naive Bayes"):
-            st.text("lorem ipsum for Naive Bayes")
-
-        elif(learnMore == "MLP"):
-            st.text("lorem ipsum for MLP")
-        
-        elif(learnMore == "Decision Tree"):
-            st.text("lorem ipsum for Decision Tree")
-
+    elif(nav == "History"):
+        st.text("")
 #calling the main function
 main()
 
