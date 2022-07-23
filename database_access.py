@@ -4,7 +4,7 @@ database_name = 'parking.db'
 # Checks if database is created, then creates table. Should be called after
 def check_db(): # Progress: Complete
     # Creates a parking.db file if it does not exist, otherwise accesses it if exists
-    connection = sql.connect(database_name) 
+    con = sql.connect(database_name) 
     
     # Create a cursor object to access table
     # Note: All SQL commands are done with the cursor object.
@@ -25,7 +25,7 @@ def check_db(): # Progress: Complete
 # Takes in user's plate number and finds any records in the database containing that plate number
 def get_previous_sessions(plate_number): # Progress: Complete
      # Creates a parking.db file if it does not exist, otherwise accesses it if exists
-    connection = sql.connect(database_name) 
+    con = sql.connect(database_name) 
     
     # Create a cursor object to access table
     # Note: All SQL commands are done with the cursor object.
