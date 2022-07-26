@@ -1,15 +1,16 @@
 import numpy as np
 import streamlit as st
+from streamlit_option_menu import option_menu
 import sklearn
 import datetime
 import pytz
 import pickle
 import re # for regex
 import random
+import pandas as pd
 
-from xgboost import XGBClassifier
-import xgboost as xgb
 
+import database_access
 
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
@@ -17,6 +18,8 @@ from sklearn import ensemble
 
 # Importing built-in library for SQLite functionality
 import sqlite3 as sql
+
+
 
 epochTime = datetime.datetime(1970,1,1)
 
@@ -28,7 +31,6 @@ def prediction(model, featureArray):
     finalPred = model.predict(ReshapedArray)
 
     if(finalPred[0] == 0):
-        print(finalPred[0])
         return 'Short term parking' 
     else:
         return 'Seasonal parking'
@@ -40,9 +42,7 @@ def modelSelect():
      ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes', 'MLP', 'Decision Tree'))
      
     if(option == "XGBoost - Default"):
-        model = xgb.XGBClassifier()
-        model.load_model('model.txt')
-
+        model = pickle.load(open('XGBoost_pkl_Latest6.pkl', 'rb'))
         return model
         
 
@@ -67,7 +67,7 @@ def modelSelect():
         return model
 
     elif(option == "Naive Bayes"):
-        model = pickle.load(open('NaiveBayes_pkl_Latest2.pkl', 'rb'))
+        model = pickle.load(open('NaiveBayes_pkl_Latest3.pkl', 'rb'))
         return model
 
     elif(option == "Decision Tree"):
@@ -97,7 +97,6 @@ def epochCalc(dateTime):
     daySeconds = intDaysEpoch * 3600 * 24
     #Finding the total seconds, adding up the seconds in days and the time seconds the user had to input
     inSeconds = daySeconds + endEpoch.seconds
-    print(endEpoch)
     return inSeconds
 
 def time_in_range(start, end, current):
@@ -105,8 +104,16 @@ def time_in_range(start, end, current):
     return start <= current <= end 
 
 def main():
+
+    database_access.check_db()
+
+
     #sidebar code
-    nav = st.sidebar.radio("Navigation",["Home","History"])
+    with st.sidebar:
+        nav = option_menu(
+            menu_title = "Navigation",
+            options = ["Home", "History"]
+        )
 
     if(nav == "Home"):
         VehType = 0
@@ -149,13 +156,15 @@ def main():
             hours = duration/60
             st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
 
+
         #Calculate session start and end in minutes since Epoch
         sesStart = round((epochCalc(utctimeNow)/60),2)
         sessEnd = duration + sesStart
         
         SessEndDate = datetime.datetime.fromtimestamp((sessEnd*60))
+        sesStartDate = datetime.datetime.fromtimestamp((sesStart*60))
 
-        if(plateNo.startswith("S" or "J")):
+        if(plateNo.startswith('J') or plateNo.startswith('S')):
             VehType = 0
             intCharge = 0.6 * int((duration/30))
 
@@ -203,18 +212,35 @@ def main():
                     lotNumber =  random.randint(1,161)
                 elif(VehType == 1):
                     lotNumber =  random.randint(481,500)
+
+                sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), lotNumber]
+                database_access.add_session(sessionDeet)
                 
                 #Displaying lot number and session information for user
-                st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber) + "\nTotal cost: $" + str(effCharge))
+                st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber) + "\nTotal cost: $" + str(round(effCharge,2)))
         else:
             st.button('Predict',disabled=True)
         
 
 
     elif(nav == "History"):
-        st.text("")
+        CheckPlate = st.text_input('Please enter license plate to search parking history for:').upper()
+
+        if(CheckPlate != ''):
+            DBrows = database_access.get_previous_sessions(CheckPlate)
+            df = pd.DataFrame(DBrows, columns = ['License plate', 'Session Start', 'Session End', 'Lot number'])
+            if(len(df.index) == 0):
+                st.text('No parking history found')
+            else:
+                st.table(df)
+                if(st.button('Clear history')):
+                    st.text(database_access.deleteSessions(CheckPlate))
+
+            
+
 #calling the main function
 main()
+
 
 
 

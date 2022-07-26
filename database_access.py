@@ -66,7 +66,7 @@ def get_previous_sessions(plate_number): # Progress: Complete
     cur = con.cursor()
     
     # Getting previous sessions
-    cur.execute("SELECT * FROM sessions WHERE license_number == ?", (plate_number))
+    cur.execute("SELECT * FROM sessions WHERE license_number == ?", (plate_number,))
     
     prev_sessions = cur.fetchall()
 
@@ -74,3 +74,22 @@ def get_previous_sessions(plate_number): # Progress: Complete
     con.close()
     
     return prev_sessions
+
+
+def deleteSessions(plate_number):
+     # Creates a parking.db file if it does not exist, otherwise accesses it if exists
+    con = sql.connect(database_name) 
+    
+    # Create a cursor object to access table
+    # Note: All SQL commands are done with the cursor object.
+    cur = con.cursor()
+    
+    # Getting previous sessions
+    cur.execute("DELETE FROM sessions WHERE license_number == ?", (plate_number,))
+    
+    prev_sessions = cur.fetchall()
+
+    con.commit()
+    con.close()
+    
+    return 'History has been cleared'
