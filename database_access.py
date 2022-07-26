@@ -61,22 +61,6 @@ def add_session(session): # Progress: Complete
     con.close()
 
 
-def remove_session(plate_number): # Progress: WIP
-    # Creates a parking.db file if it does not exist, otherwise accesses it if exists
-    con = sql.connect(database_name)
-
-    # Create a cursor object to access table
-    # Note: All SQL commands are done with the cursor object.
-    cur = con.cursor()
-
-    # Getting previous sessions
-    sql_command = "DELETE sessions WHERE license_number = ?"
-    cur.execute(sql_command, (plate_number))
-
-    con.commit()
-    con.close()
-
-
 # Takes in user's plate number and finds any records in the database containing that plate number
 def get_previous_sessions(plate_number): # Progress: Complete
      # Creates a parking.db file if it does not exist, otherwise accesses it if exists
