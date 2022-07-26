@@ -112,7 +112,7 @@ def main():
     with st.sidebar:
         nav = option_menu(
             menu_title = "Navigation",
-            options = ["Home", "History"]
+            options = ["Home", "History", "Payment"]
         )
 
     if(nav == "Home"):
@@ -236,6 +236,8 @@ def main():
                 if(st.button('Clear history')):
                     st.text(database_access.deleteSessions(CheckPlate))
 
+    elif(nav == "Payment"):
+        cardDeet = st.text_input("Please enter card ")
             
 
 #calling the main function
