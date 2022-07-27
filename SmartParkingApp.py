@@ -144,7 +144,7 @@ def main():
     with st.sidebar:
         nav = option_menu(
             menu_title = "Navigation",
-            options = ["Home", "History", "Payment"]
+            options = ["Home", "Sessions", "Payment"]
         )
 
     if(nav == "Home"):
@@ -262,32 +262,51 @@ def main():
         
 
 
-    elif(nav == "History"):
+    elif(nav == "Sessions"):
         CheckPlate = st.text_input('Please enter license plate to search parking history for:').upper()
 
         if(CheckPlate != ''):
             prevSess = database_access.get_previous_sessions(CheckPlate)
             prevSessDF = pd.DataFrame(prevSess, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
+            prevSessDF.Cost = "$" + prevSessDF['Cost'].round(decimals = 2).map(str)   
 
 
             if(database_access.noCurrentSess(CheckPlate) == False):
                 st.header('Current session')
                 getCurrent = database_access.get_current_session(CheckPlate)
                 currentSess = pd.DataFrame(getCurrent, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
-                st.table(currentSess)
+                currentSess.Cost = "$" + str(round(currentSess.Cost[0],2))
+                st.dataframe(currentSess)
 
-                if(st.button('End session')):
+                EndSessionButton, extendSession = st.columns([1,1])
+
+                EndSessionButton = EndSessionButton.button('End session' )
+
+                extendSession = extendSession.button('Extend session')
+
+                if(EndSessionButton):
                     database_access.endSession(CheckPlate)
                     st.success('Current Session has been ended')
+
+                if(extendSession):
+                    currentDT = currentSess['Session End'][0]
+                    strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
+
+                    duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
+                    
+                    updatedDT = strToDate + datetime.timedelta(minutes=duration)
+
+                    
+
+                    st.write(updatedDT)
 
 
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
                 st.header('Past Sessions')
-                st.table(prevSessDF)
+                st.dataframe(prevSessDF)
 
                 if(st.button('Clear history')):
                     st.text(database_access.deleteSessions(CheckPlate))
-                    database_access.deleteSessions(CheckPlate)
 
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
                 st.text('No parking history found')
