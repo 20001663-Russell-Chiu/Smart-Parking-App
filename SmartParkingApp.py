@@ -8,6 +8,9 @@ import pickle
 import re # for regex
 import random
 import pandas as pd
+import os
+
+from validators import card_number
 
 
 import database_access
@@ -22,6 +25,10 @@ import sqlite3 as sql
 
 
 epochTime = datetime.datetime(1970,1,1)
+st.session_state.cardName = ''
+cardNo = ''
+cardCVV = ''
+cardDate = ''
 
 #def prediction(model, VehType, startTime, endTime, totalCharge, Duration, effectiveCharge):
 def prediction(model, featureArray):
@@ -36,51 +43,73 @@ def prediction(model, featureArray):
         return 'Seasonal parking'
 
 def modelSelect():
+
+    script_path = os.path.abspath(__file__) #e.g. /path/to/dir/smartparkingapp.py
+    script_dir = os.path.split(script_path)[0] #e.g. /path/to/dir/ - removes the current file name
+
     #getting user input for which model to use
     option = st.selectbox(
      'What AI model would you like to use?',
      ('XGBoost - Default', 'Logistic Regression', 'K-nearest neighbours', 'SVC', 'SGD', 'Random Forest', 'Naive Bayes', 'MLP', 'Decision Tree'))
      
     if(option == "XGBoost - Default"):
-        model = pickle.load(open('XGBoost_pkl_Latest6.pkl', 'rb'))
+        rel_path = "pkl folder/XGBoost_pkl_Final.pkl" #relative path of model files
+        abs_file_path = os.path.join(script_dir, rel_path) #joins the 2 strings together to get the absolute path
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
         
 
     elif(option == "K-nearest neighbours"):
-        model = pickle.load(open('KNeighborsClassifier.pkl', 'rb'))
+        rel_path = "pkl folder/KNeighborsClassifier.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
 
     elif(option == "SVC"):
-        model = pickle.load(open('SVC.pkl', 'rb'))
+        rel_path = "pkl folder/SVC.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
 
     elif(option == "SGD"):
-        model = pickle.load(open('SGDClassifier.pkl', 'rb'))
+        rel_path = "pkl folder/SGDClassifier.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
 
     elif(option == "Random Forest"):
-        model = pickle.load(open('RandomForestClassifier.pkl', 'rb'))
+        rel_path = "pkl folder/RandomForestClassifier.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
 
     elif(option == "Logistic Regression"):
-        model = pickle.load(open('logreg.pkl', 'rb')) 
+        rel_path = "pkl folder/logreg.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb')) 
         return model
 
     elif(option == "Naive Bayes"):
-        model = pickle.load(open('NaiveBayes_pkl_Latest3.pkl', 'rb'))
+        rel_path = "pkl folder/NaiveBayes_pkl_Final.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
 
     elif(option == "Decision Tree"):
-        model = pickle.load(open('DecisionTree_pkl_latest.pkl', 'rb'))
+        rel_path = "pkl folder/DecisionTree_pkl_latest.pkl"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
     
     elif(option == "MLP"):
-        model = pickle.load(open('MLP_pkl_latest', 'rb'))
+        rel_path = "pkl folder/MLP_pkl_latestest"
+        abs_file_path = os.path.join(script_dir, rel_path)
+        model = pickle.load(open(abs_file_path, 'rb'))
         return model
     
 
 def regex(plateNo):
-    pattern = "([SFG][^AIO][^IO\d]\d\d\d\d[^FINOQVW\W\d])$|([SFG][^AIO]\d\d\d\d[^FINOQVW\W\d])$|(J[^AIO]\d\d\d\d)$|(J[^AIO][^AIO]\d\d\d\d)$"
+    pattern = "([SFG][^AIO\d][^AIO\d][0-9]{1,4}[^FINOQVW\W\d])$|([SFG][^AIO\d][0-9]{1,4}[^FINOQVW\W\d])$|(J[^AIO\d][0-9]{1,4})$|(J[^AIO\d][^AIO\d][0-9]{1,4})$"
     if(re.search(pattern, plateNo)):
         return 'Valid'
     else:   
@@ -103,10 +132,13 @@ def time_in_range(start, end, current):
     #Returns whether current is in the range [start, end]
     return start <= current <= end 
 
+def update_first(cardName):
+    st.session_state.cardName = cardName
+
+
+
 def main():
-
     database_access.check_db()
-
 
     #sidebar code
     with st.sidebar:
@@ -137,7 +169,7 @@ def main():
         model = modelSelect()
 
         #Getting user input license plate
-        plateNo = st.text_input('Please enter License plate number: ').upper()
+        plateNo = st.text_input("Enter license plate").upper()
         if(plateNo != "" and regex(plateNo) == 'Invalid'):
             error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid License plate</p>'
             st.markdown(error, unsafe_allow_html=True)
@@ -199,25 +231,32 @@ def main():
         if(plateNo != '' and  regex(plateNo) != 'Invalid' and validDuration == True):
             # Connecting to database
             # prev_session = get_previous_sessions(plateNo) # Uncomment once get_previous_sessions() function is complete
-        
-            if(st.button('Predict',disabled=False)):
-                pred = prediction(model, featureList)
-                st.success(pred)
-                #st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
-                
-                #Depending on model prediction, will assign a lot number to user
-                if(pred == 'Short term parking'):
-                    lotNumber =  random.randint(161,480)
-                elif(pred == 'Seasonal parking'):
-                    lotNumber =  random.randint(1,161)
-                elif(VehType == 1):
-                    lotNumber =  random.randint(481,500)
 
-                sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), lotNumber]
-                database_access.add_session(sessionDeet)
+
+            if(st.button('Predict',disabled=False)):
+                if(database_access.noCurrentSess(plateNo)):           
+                    pred = prediction(model, featureList)
+                    st.success(pred)
+                    #st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
+                    
+                    #Depending on model prediction, will assign a lot number to user
+                    if(pred == 'Short term parking'):
+                        lotNumber =  random.randint(161,480)
+                    elif(pred == 'Seasonal parking'):
+                        lotNumber =  random.randint(1,161)
+                    elif(VehType == 1):
+                        lotNumber =  random.randint(481,500)
+
+                    sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), effCharge ,lotNumber, False]
+                    database_access.add_session(sessionDeet)
+                    
+                    #Displaying lot number and session information for user
+                    st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber) + "\nTotal cost: $" + str(round(effCharge,2)))
                 
-                #Displaying lot number and session information for user
-                st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber) + "\nTotal cost: $" + str(round(effCharge,2)))
+                else:
+                    st.text("There is already a current active session with this license plate")
+
+                
         else:
             st.button('Predict',disabled=True)
         
@@ -227,18 +266,49 @@ def main():
         CheckPlate = st.text_input('Please enter license plate to search parking history for:').upper()
 
         if(CheckPlate != ''):
-            DBrows = database_access.get_previous_sessions(CheckPlate)
-            df = pd.DataFrame(DBrows, columns = ['License plate', 'Session Start', 'Session End', 'Lot number'])
-            if(len(df.index) == 0):
-                st.text('No parking history found')
-            else:
-                st.table(df)
+            prevSess = database_access.get_previous_sessions(CheckPlate)
+            prevSessDF = pd.DataFrame(prevSess, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
+
+
+            if(database_access.noCurrentSess(CheckPlate) == False):
+                st.header('Current session')
+                getCurrent = database_access.get_current_session(CheckPlate)
+                currentSess = pd.DataFrame(getCurrent, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
+                st.table(currentSess)
+
+                if(st.button('End session')):
+                    database_access.endSession(CheckPlate)
+                    st.success('Current Session has been ended')
+
+
+            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
+                st.header('Past Sessions')
+                st.table(prevSessDF)
+
                 if(st.button('Clear history')):
                     st.text(database_access.deleteSessions(CheckPlate))
+                    database_access.deleteSessions(CheckPlate)
+
+            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
+                st.text('No parking history found')
+            
+
 
     elif(nav == "Payment"):
-        cardDeet = st.text_input("Please enter card ")
-            
+        
+        cardName = st.text_input('Cardholder name', value=st.session_state.cardName)
+        update_first(cardName)
+        st.write(st.session_state.cardName)
+
+        cardNo = st.text_input("Card number")
+        
+        cardDate, cardCVV = st.columns(2)
+
+        cardDate = cardDate.text_input("Expiry date")
+
+        cardCVV = cardCVV.text_input("Security code/CVV")
+
+        #if(st.button('Save')):
 
 #calling the main function
 main()
