@@ -372,7 +372,7 @@ def main():
                         st.success("Session has been extended")
                     st.session_state.extend = False
 
-            if(database_access.noCurrentSess(CheckPlate) == False and len(prevSessDF.index) > 0):
+            if(len(prevSessDF.index) > 0):
                 with prevSession.container():
                     st.header('Past Sessions')
                     st.dataframe(prevSessDF)
@@ -382,7 +382,7 @@ def main():
                         database_access.deleteSessions(CheckPlate)
                         st.success("History has been cleared")
                         prevSession.empty()
-
+            
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
                 st.text('No parking history found')
 
