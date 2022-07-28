@@ -71,7 +71,7 @@ def get_previous_sessions(plate_number): # Progress: Complete
     cur = con.cursor()
     
     # Getting previous sessions
-    cur.execute("SELECT license_number, session_start, session_end, session_cost, lot_number FROM sessions WHERE license_number == ?", (plate_number,))
+    cur.execute("SELECT license_number, session_start, session_end, session_cost, lot_number FROM sessions WHERE license_number == ? AND paid == True", (plate_number,))
     
     prev_sessions = cur.fetchall()
 
@@ -90,7 +90,7 @@ def get_current_session(plate_number): # Progress: Complete
     cur = con.cursor()
     
     # Getting current sessions if any
-    cur.execute("SELECT license_number, session_start, session_end, session_cost, lot_number FROM sessions WHERE license_number == ? AND paid == ?", (plate_number, False,))
+    cur.execute("SELECT license_number, session_start, session_end, session_cost, lot_number FROM sessions WHERE license_number == ? AND paid == False", (plate_number,))
     
     prev_sessions = cur.fetchall()
 

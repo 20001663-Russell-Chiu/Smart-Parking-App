@@ -211,7 +211,6 @@ def main():
         intCharge = 0
         #Title of our app
         st.title('HDB Smart Parking App')
-
         #Display session start time
         utctimeNow = datetime.datetime.utcnow()
         timeNow = datetime.datetime.now()
@@ -237,11 +236,16 @@ def main():
             VehType = 2
 
 
-        duration = durationSelect()
+        duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
+
+        if(duration < 0):
+            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
+            st.markdown(error, unsafe_allow_html=True)
+
 
         #Calculate session start and end in minutes since Epoch
         sesStart = round((epochCalc(utctimeNow)),2)
-        sessEnd = duration + sesStart
+        sessEnd = (duration*60) + sesStart
         
         sesStartDate = datetime.datetime.fromtimestamp((sesStart))
 
@@ -309,7 +313,6 @@ def main():
 
         currentSession =  st.empty()
         prevSession = st.empty()
-        extendUI = st.empty()
 
 
         if(CheckPlate != ''):
@@ -334,10 +337,10 @@ def main():
                     extendSession = extendSession.button('Extend session')
 
                     if(EndSessionButton):
-                        placeholdermsg = st.empty()
                         database_access.endSession(CheckPlate)
-                        currentSession.empty()
-                        placeholdermsg.success('Current active session has been ended')
+                        st.success('Current session has been ended')
+                        st.experimental_rerun()
+
 
                     if(extendSession):
                         st.session_state.input = True
@@ -346,21 +349,24 @@ def main():
                         currentDT = currentSess['Session End'][0]
                         strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
 
-                        duration = durationSelect()          
+                        duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)      
                         try:
                             updatedDT = (strToDate + datetime.timedelta(minutes=duration)).strftime("%Y/%m/%d, %H:%M")
                             st.text(str(int(duration/60)) + " hours " + str((duration%60)) + " minutes" )  
                         except:
-                            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
-                            st.markdown(error, unsafe_allow_html=True)
+                            print('')
                         
                         intCharge = database_access.getTotalCost(CheckPlate)
 
-                        intCharge = round(chargeCalc(CheckPlate, duration, float(intCharge)),2)
+                        try:
+                            intCharge = round(chargeCalc(CheckPlate, duration, float(intCharge)),2)
+                        except:
+                            print('')
 
-                        print(intCharge)
-
-                        confirm = st.button('Confirm')
+                        if(duration >= 0):
+                            confirm = st.button('Confirm')
+                        else:
+                            confirm = st.button('Confirm',disabled=True)
 
                         if(confirm):
                             st.success(database_access.extendTimeCost(updatedDT,intCharge,CheckPlate))
@@ -372,7 +378,7 @@ def main():
                         st.success("Session has been extended")
                     st.session_state.extend = False
 
-            if(database_access.noCurrentSess(CheckPlate) == False and len(prevSessDF.index) > 0):
+            if(len(prevSessDF.index) > 0):
                 with prevSession.container():
                     st.header('Past Sessions')
                     st.dataframe(prevSessDF)
@@ -400,6 +406,7 @@ def main():
             cardCVV = cardCVV.text_input("Security code/CVV", value=st.session_state['cardCVV'], key='cardCVV')
 
             submit_button = st.form_submit_button(label='Submit')
+
 
 #calling the main function
 main()
