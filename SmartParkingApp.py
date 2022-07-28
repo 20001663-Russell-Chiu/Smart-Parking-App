@@ -388,7 +388,7 @@ def main():
                         database_access.deleteSessions(CheckPlate)
                         st.success("History has been cleared")
                         prevSession.empty()
-
+            
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
                 st.text('No parking history found')
 
