@@ -132,37 +132,9 @@ def time_in_range(start, end, current):
     #Returns whether current is in the range [start, end]
     return start <= current <= end 
 
-def chargeCalc(plateNo, duration, timeNow, SessEndDate):
-    intCharge = 0
-    timeNow = datetime.datetime.strftime(timeNow,"%Y/%m/%d, %H:%M")
-    timeNow = datetime.datetime.strptime(timeNow,"%Y/%m/%d, %H:%M")
+def update_first(cardName):
+    st.session_state.cardName = cardName
 
-    if(str(plateNo).startswith('J') or str(plateNo).startswith('S')):
-        intCharge = 0.6 * int((duration/30))
-
-    elif(str(plateNo).startswith("F")):
-        start = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,7,0,0)
-        end = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
-
-        #Night time charge range
-        startNight = datetime.datetime(timeNow.year, timeNow.month, (timeNow.day-1),22,30,0)
-        endNight = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,7,0,0)
-
-        # #If session start time and session end date is within both day and night time periods, the fee will be $1.2
-        # if(time_in_range(start,end, timeNow) and time_in_range(startNight,endNight, SessEndDate)):
-        #     print("TES232332T 1")
-        #     intCharge += 1.2
-        # #If the session starts in the day but ends before night time, the fee will be $0.65 and vice versa
-        # elif(time_in_range(start,end, timeNow) or time_in_range(startNight,endNight, SessEndDate) or time_in_range(startNight,endNight, timeNow) or time_in_range(start,end, SessEndDate)):
-        #     print("TE2323333ST 2")
-        #     intCharge += 0.65
-
-        intCharge = 0.65 * int(((duration/60)/12))
-        
-    elif(str(plateNo).startswith("G")):
-        intCharge = 1.2 * int((duration/30))
-
-    return intCharge
 
 
 def main():
@@ -172,7 +144,7 @@ def main():
     with st.sidebar:
         nav = option_menu(
             menu_title = "Navigation",
-            options = ["Home", "Sessions"]
+            options = ["Home", "Sessions", "Payment"]
         )
 
     if(nav == "Home"):
@@ -201,21 +173,13 @@ def main():
         if(plateNo != "" and regex(plateNo) == 'Invalid'):
             error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid License plate</p>'
             st.markdown(error, unsafe_allow_html=True)
-        
-        if(plateNo.startswith('J') or plateNo.startswith('S')):
-            VehType = 0
-          
-        elif(plateNo.startswith("F")):
-            VehType = 1
 
-        elif(plateNo.startswith("G")):
-            VehType = 2
-              
+
+
 
         #Calculate duration
         duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
         validDuration = True
-
         if(duration < 0):
             validDuration = False
             error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
@@ -224,13 +188,37 @@ def main():
             hours = duration/60
             st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
 
+
         #Calculate session start and end in minutes since Epoch
         sesStart = round((epochCalc(utctimeNow)/60),2)
         sessEnd = duration + sesStart
-            
+        
         SessEndDate = datetime.datetime.fromtimestamp((sessEnd*60))
+        sesStartDate = datetime.datetime.fromtimestamp((sesStart*60))
 
-        intCharge = chargeCalc(plateNo, duration, timeNow, SessEndDate)       
+        if(plateNo.startswith('J') or plateNo.startswith('S')):
+            VehType = 0
+            intCharge = 0.6 * int((duration/30))
+
+        elif(plateNo.startswith("F")):
+            VehType = 1
+            start = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,7,0,0)
+            end = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
+
+            #Night time charge range
+            startNight = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
+            endNight = datetime.datetime(timeNow.year, timeNow.month, (timeNow.day + 1),7,0,0)
+
+            #If session start time and session end date is within both day and night time periods, the fee will be $1.2
+            if(time_in_range(start,end, timeNow) and time_in_range(startNight,endNight, SessEndDate)):
+                intCharge += 1.2
+            #If the session starts in the day but ends before night time, the fee will be $0.65 and vice versa
+            elif(time_in_range(start,end, timeNow) or time_in_range(startNight,endNight, SessEndDate)):
+                intCharge += 0.65
+
+        elif(plateNo.startswith("G")):
+            VehType = 2
+            intCharge = 1.2 * int((duration/30))        
 
         effCharge = intCharge
 
@@ -259,8 +247,8 @@ def main():
                     elif(VehType == 1):
                         lotNumber =  random.randint(481,500)
 
-                    # sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), effCharge ,lotNumber, False]
-                    # database_access.add_session(sessionDeet)
+                    sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), effCharge ,lotNumber, False]
+                    database_access.add_session(sessionDeet)
                     
                     #Displaying lot number and session information for user
                     st.text("License plate: " + plateNo + "\nSession end time: " + str(SessEndDate.strftime("%Y/%m/%d, %H:%M")) + "\nLot number: " + str(lotNumber) + "\nTotal cost: $" + str(round(effCharge,2)))
@@ -275,9 +263,6 @@ def main():
 
 
     elif(nav == "Sessions"):
-        if "input" not in st.session_state:
-            st.session_state.input = False
-
         CheckPlate = st.text_input('Please enter license plate to search parking history for:').upper()
 
         if(CheckPlate != ''):
@@ -299,33 +284,21 @@ def main():
 
                 extendSession = extendSession.button('Extend session')
 
-
                 if(EndSessionButton):
                     database_access.endSession(CheckPlate)
                     st.success('Current Session has been ended')
 
                 if(extendSession):
-                    st.session_state.input = True
-
-
-                if(st.session_state.input):                     
                     currentDT = currentSess['Session End'][0]
                     strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
+
                     duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
                     
-                    updatedDT = (strToDate + datetime.timedelta(minutes=duration)).strftime("%Y/%m/%d, %H:%M")
+                    updatedDT = strToDate + datetime.timedelta(minutes=duration)
 
-                
-                    st.text(duration)
+                    
 
-                    if(updatedDT != ''):
-                        if(st.button('Confirm')):
-                            st.text(database_access.extendTimeCost(updatedDT,0.65,CheckPlate))
-                            st.write('Session extended')
-                            st.session_state.input = False
-
-
-                        
+                    st.write(updatedDT)
 
 
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
@@ -338,6 +311,23 @@ def main():
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
                 st.text('No parking history found')
             
+
+
+    elif(nav == "Payment"):
+        
+        cardName = st.text_input('Cardholder name', value=st.session_state.cardName)
+        update_first(cardName)
+        st.write(st.session_state.cardName)
+
+        cardNo = st.text_input("Card number")
+        
+        cardDate, cardCVV = st.columns(2)
+
+        cardDate = cardDate.text_input("Expiry date")
+
+        cardCVV = cardCVV.text_input("Security code/CVV")
+
+        #if(st.button('Save')):
 
 #calling the main function
 main()

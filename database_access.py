@@ -30,8 +30,8 @@ def check_db(): # Progress: Complete
         """)
         con.commit()
         con.close()
-    # else:
-    #     print('Database already exists.')
+    else:
+        print('Database already exists.')
 
 
 ''' 
@@ -89,7 +89,7 @@ def get_current_session(plate_number): # Progress: Complete
     # Note: All SQL commands are done with the cursor object.
     cur = con.cursor()
     
-    # Getting current sessions if any
+    # Getting previous sessions
     cur.execute("SELECT license_number, session_start, session_end, session_cost, lot_number FROM sessions WHERE license_number == ? AND paid == ?", (plate_number, False,))
     
     prev_sessions = cur.fetchall()
@@ -126,8 +126,8 @@ def noCurrentSess(plate_number):
     # Note: All SQL commands are done with the cursor object.
     cur = con.cursor()
     
-    #Checks if this license number has a current active session
-    cur.execute("SELECT * FROM sessions WHERE license_number == ? AND paid == False", (plate_number,))
+    # Getting previous sessions
+    cur.execute("SELECT * FROM sessions WHERE license_number == ? AND paid == ?", (plate_number,False,))
     
     currentSession = cur.fetchall()
 
@@ -149,28 +149,17 @@ def endSession(plate_number):
     # Note: All SQL commands are done with the cursor object.
     cur = con.cursor()
     
-    #Update session paid column to true
+    # Getting previous sessions
     cur.execute("UPDATE sessions SET paid = True WHERE license_number == ?", (plate_number,))
+    
+    currentSession = cur.fetchall()
 
+    if(len(currentSession) == 0):
+        NoCurrentSess = True
+    else:
+        NoCurrentSess = False
 
     con.commit()
     con.close()
     
-    return 'Session ended'
-
-
-def extendTimeCost(endTime, Cost, license_number):
-     # Creates a parking.db file if it does not exist, otherwise accesses it if exists
-    con = sql.connect(database_name) 
-    
-    # Create a cursor object to access table
-    # Note: All SQL commands are done with the cursor object.
-    cur = con.cursor()
-    
-    #Update session end time and session cost fields
-    cur.execute("UPDATE sessions SET session_end = ?, session_cost = ? WHERE license_number == ? AND paid == False", (endTime, Cost, license_number,))
-
-    con.commit()
-    con.close()
-    
-    return 'Session extended'
+    return NoCurrentSess
