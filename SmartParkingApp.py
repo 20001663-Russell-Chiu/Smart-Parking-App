@@ -1,8 +1,11 @@
+from logging import PlaceHolder
 import numpy as np
+from sklearn.utils import check_matplotlib_support
 import streamlit as st
 from streamlit_option_menu import option_menu
 import sklearn
 import datetime
+import time
 import pytz
 import pickle
 import re # for regex
@@ -25,10 +28,15 @@ import sqlite3 as sql
 
 
 epochTime = datetime.datetime(1970,1,1)
-st.session_state.cardName = ''
-cardNo = ''
-cardCVV = ''
-cardDate = ''
+
+if 'cardName' not in st.session_state:
+    st.session_state['cardName'] = ''
+if 'cardNo' not in st.session_state:
+    st.session_state['cardNo'] = ''
+if 'cardDate' not in st.session_state:
+    st.session_state['cardDate'] = ''
+if 'cardCVV' not in st.session_state:
+    st.session_state['cardCVV'] = ''
 
 #def prediction(model, VehType, startTime, endTime, totalCharge, Duration, effectiveCharge):
 def prediction(model, featureArray):
@@ -107,6 +115,17 @@ def modelSelect():
         model = pickle.load(open(abs_file_path, 'rb'))
         return model
     
+def durationSelect():
+    #Calculate duration
+    duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
+
+    if(duration < 0):
+        error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
+
+        return st.markdown(error, unsafe_allow_html=True)
+
+    else:
+        return duration
 
 def regex(plateNo):
     pattern = "([SFG][^AIO\d][^AIO\d][0-9]{1,4}[^FINOQVW\W\d])$|([SFG][^AIO\d][0-9]{1,4}[^FINOQVW\W\d])$|(J[^AIO\d][0-9]{1,4})$|(J[^AIO\d][^AIO\d][0-9]{1,4})$"
@@ -132,9 +151,43 @@ def time_in_range(start, end, current):
     #Returns whether current is in the range [start, end]
     return start <= current <= end 
 
-def update_first(cardName):
-    st.session_state.cardName = cardName
+def chargeCalc(plateNo, duration, intCharge):
+    # strtimeNow = datetime.datetime.strftime(timeNow,"%Y/%m/%d, %H:%M")
+    # DTtimeNow = datetime.datetime.strptime(strtimeNow,"%Y/%m/%d, %H:%M")
 
+
+    if(str(plateNo).startswith('J') or str(plateNo).startswith('S')):
+        intCharge += 0.6 * int((duration/30))
+
+    elif(str(plateNo).startswith("F")):
+        intCharge += 0.65
+
+        if(int(((duration/60)/12)) > 0):
+            intCharge += (0.65 * int(((duration/60)/12)))
+        
+    elif(str(plateNo).startswith("G")):
+        intCharge += 1.2 * int((duration/30))
+
+    return intCharge
+
+def customMsg(msg, wait=3, type_='warning'):
+    placeholder = st.empty()
+    styledMsg = f'\
+        <div class="element-container" style="width: 693px;">\
+            <div class="alert alert-{type_} stAlert" style="width: 693px;">\
+                <div class="markdown-text-container">\
+                    <p>{msg}</p></div></div></div>\
+    '
+    placeholder.markdown(styledMsg, unsafe_allow_html=True)
+    time.sleep(wait)
+    placeholder.empty()
+
+
+def return_payment_info():
+    st.session_state['cardName'] = st.session_state['cardName']
+    st.session_state['cardNo'] = st.session_state['cardNo']
+    st.session_state['cardDate'] = st.session_state['cardDate']
+    st.session_state['cardCVV'] = st.session_state['cardCVV']
 
 
 def main():
@@ -168,59 +221,42 @@ def main():
         #getting user input for which model to use
         model = modelSelect()
 
-        #Getting user input license plate
+         #Getting user input license plate
         plateNo = st.text_input("Enter license plate").upper()
         if(plateNo != "" and regex(plateNo) == 'Invalid'):
             error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid License plate</p>'
             st.markdown(error, unsafe_allow_html=True)
-
-
-
-
-        #Calculate duration
-        duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
-        validDuration = True
-        if(duration < 0):
-            validDuration = False
-            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
-            st.markdown(error, unsafe_allow_html=True)
-        else:
-            hours = duration/60
-            st.text(str(int(hours)) + " hours " + str((duration%60)) + " minutes" )
-
-
-        #Calculate session start and end in minutes since Epoch
-        sesStart = round((epochCalc(utctimeNow)/60),2)
-        sessEnd = duration + sesStart
         
-        SessEndDate = datetime.datetime.fromtimestamp((sessEnd*60))
-        sesStartDate = datetime.datetime.fromtimestamp((sesStart*60))
-
         if(plateNo.startswith('J') or plateNo.startswith('S')):
             VehType = 0
-            intCharge = 0.6 * int((duration/30))
-
+          
         elif(plateNo.startswith("F")):
             VehType = 1
-            start = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,7,0,0)
-            end = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
-
-            #Night time charge range
-            startNight = datetime.datetime(timeNow.year, timeNow.month, timeNow.day,22,30,0)
-            endNight = datetime.datetime(timeNow.year, timeNow.month, (timeNow.day + 1),7,0,0)
-
-            #If session start time and session end date is within both day and night time periods, the fee will be $1.2
-            if(time_in_range(start,end, timeNow) and time_in_range(startNight,endNight, SessEndDate)):
-                intCharge += 1.2
-            #If the session starts in the day but ends before night time, the fee will be $0.65 and vice versa
-            elif(time_in_range(start,end, timeNow) or time_in_range(startNight,endNight, SessEndDate)):
-                intCharge += 0.65
 
         elif(plateNo.startswith("G")):
             VehType = 2
-            intCharge = 1.2 * int((duration/30))        
 
-        effCharge = intCharge
+
+        duration = durationSelect()
+
+        #Calculate session start and end in minutes since Epoch
+        sesStart = round((epochCalc(utctimeNow)),2)
+        sessEnd = duration + sesStart
+        
+        sesStartDate = datetime.datetime.fromtimestamp((sesStart))
+
+        try: 
+            SessEndDate = datetime.datetime.fromtimestamp((sessEnd))
+            st.text(str(int(duration/60)) + " hours " + str((duration%60)) + " minutes" )
+        except:
+            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
+            st.markdown(error, unsafe_allow_html=True)
+
+
+        intCharge = 0
+        intCharge = chargeCalc(plateNo, duration, intCharge)       
+
+        effCharge = intCharge       
 
         #initializing the prediciton variable
         pred = ''
@@ -228,10 +264,9 @@ def main():
         featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
         
 
-        if(plateNo != '' and  regex(plateNo) != 'Invalid' and validDuration == True):
+        if(plateNo != '' and  regex(plateNo) != 'Invalid' and duration > 0):
             # Connecting to database
             # prev_session = get_previous_sessions(plateNo) # Uncomment once get_previous_sessions() function is complete
-
 
             if(st.button('Predict',disabled=False)):
                 if(database_access.noCurrentSess(plateNo)):           
@@ -260,74 +295,112 @@ def main():
         else:
             st.button('Predict',disabled=True)
         
-
+        return_payment_info()
 
     elif(nav == "Sessions"):
+        
+        if "input" not in st.session_state:
+            st.session_state.input = False
+
+        if "extend" not in st.session_state:
+            st.session_state.extend = False
+
         CheckPlate = st.text_input('Please enter license plate to search parking history for:').upper()
+
+        currentSession =  st.empty()
+        prevSession = st.empty()
+        extendUI = st.empty()
+
 
         if(CheckPlate != ''):
             prevSess = database_access.get_previous_sessions(CheckPlate)
             prevSessDF = pd.DataFrame(prevSess, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
-            prevSessDF.Cost = "$" + prevSessDF['Cost'].round(decimals = 2).map(str)   
-
-
-            if(database_access.noCurrentSess(CheckPlate) == False):
-                st.header('Current session')
-                getCurrent = database_access.get_current_session(CheckPlate)
-                currentSess = pd.DataFrame(getCurrent, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
-                currentSess.Cost = "$" + str(round(currentSess.Cost[0],2))
-                st.dataframe(currentSess)
-
-                EndSessionButton, extendSession = st.columns([1,1])
-
-                EndSessionButton = EndSessionButton.button('End session' )
-
-                extendSession = extendSession.button('Extend session')
-
-                if(EndSessionButton):
-                    database_access.endSession(CheckPlate)
-                    st.success('Current Session has been ended')
-
-                if(extendSession):
-                    currentDT = currentSess['Session End'][0]
-                    strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
-
-                    duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
-                    
-                    updatedDT = strToDate + datetime.timedelta(minutes=duration)
-
-                    
-
-                    st.write(updatedDT)
-
-
-            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
-                st.header('Past Sessions')
-                st.dataframe(prevSessDF)
-
-                if(st.button('Clear history')):
-                    st.text(database_access.deleteSessions(CheckPlate))
-
-            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
-                st.text('No parking history found')
+            prevSessDF.Cost = "$" + prevSessDF['Cost'].round(decimals = 2).map(str)  
             
 
 
+            if(database_access.noCurrentSess(CheckPlate) == False):       
+                with currentSession.container():
+                    st.header('Current session')
+                    getCurrent = database_access.get_current_session(CheckPlate)
+                    currentSess = pd.DataFrame(getCurrent, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
+                    currentSess.Cost = "$" + str(round(currentSess.Cost[0],2))
+                    st.dataframe(currentSess)
+
+                    EndSessionButton, extendSession = st.columns([1,1])
+
+                    EndSessionButton = EndSessionButton.button('End session' )
+
+                    extendSession = extendSession.button('Extend session')
+
+                if(EndSessionButton):
+                    placeholdermsg = st.empty()
+                    database_access.endSession(CheckPlate)
+                    currentSession.empty()
+                    placeholdermsg.success('Current active session has been ended')
+
+                if(extendSession):
+                    st.session_state.input = True
+
+                if(st.session_state.input):
+                    with extendUI.container():                     
+                        currentDT = currentSess['Session End'][0]
+                        strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
+
+                        duration = durationSelect()          
+                        try:
+                            updatedDT = (strToDate + datetime.timedelta(minutes=duration)).strftime("%Y/%m/%d, %H:%M")
+                            st.text(str(int(duration/60)) + " hours " + str((duration%60)) + " minutes" )  
+                        except:
+                            error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
+                            st.markdown(error, unsafe_allow_html=True)
+                        
+                        intCharge = database_access.getTotalCost(CheckPlate)
+
+                        intCharge = round(chargeCalc(CheckPlate, duration, float(intCharge)),2)
+
+                        print(intCharge)
+
+                        confirm = st.button('Confirm')
+
+                    if(confirm):
+                        st.success(database_access.extendTimeCost(updatedDT,intCharge,CheckPlate))
+                        st.session_state.input = False
+                        st.session_state.extend = True
+                        st.experimental_rerun()
+
+                if(st.session_state.extend):
+                    st.success("Session has been extended")
+                    st.session_state.extend = False
+
+            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
+                with prevSession.container():
+                    st.header('Past Sessions')
+                    st.dataframe(prevSessDF)
+                    clearHist = st.button('Clear history')
+
+                if(clearHist):
+                        database_access.deleteSessions(CheckPlate)
+                        st.success("History has been cleared")
+                        prevSession.empty()
+
+            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) == 0):
+                st.text('No parking history found')
+
+
+        return_payment_info()
+
+
     elif(nav == "Payment"):
-        
-        cardName = st.text_input('Cardholder name', value=st.session_state.cardName)
-        update_first(cardName)
-        st.write(st.session_state.cardName)
+        with st.form(key='payment_form'):
+            cardName = st.text_input('Cardholder name', value=st.session_state['cardName'], key='cardName')
+            cardNo = st.text_input("Card number", value=st.session_state['cardNo'], key='cardNo')
 
-        cardNo = st.text_input("Card number")
-        
-        cardDate, cardCVV = st.columns(2)
+            cardDate, cardCVV = st.columns(2)
+            cardDate = cardDate.text_input("Expiry date", value=st.session_state['cardDate'], key='cardDate')
+            cardCVV = cardCVV.text_input("Security code/CVV", value=st.session_state['cardCVV'], key='cardCVV')
 
-        cardDate = cardDate.text_input("Expiry date")
-
-        cardCVV = cardCVV.text_input("Security code/CVV")
-
-        #if(st.button('Save')):
+            submit_button = st.form_submit_button(label='Submit')
 
 #calling the main function
 main()
