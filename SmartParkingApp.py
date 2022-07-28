@@ -333,17 +333,16 @@ def main():
 
                     extendSession = extendSession.button('Extend session')
 
-                if(EndSessionButton):
-                    placeholdermsg = st.empty()
-                    database_access.endSession(CheckPlate)
-                    currentSession.empty()
-                    placeholdermsg.success('Current active session has been ended')
+                    if(EndSessionButton):
+                        placeholdermsg = st.empty()
+                        database_access.endSession(CheckPlate)
+                        currentSession.empty()
+                        placeholdermsg.success('Current active session has been ended')
 
-                if(extendSession):
-                    st.session_state.input = True
+                    if(extendSession):
+                        st.session_state.input = True
 
-                if(st.session_state.input):
-                    with extendUI.container():                     
+                    if(st.session_state.input):                   
                         currentDT = currentSess['Session End'][0]
                         strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
 
@@ -363,17 +362,17 @@ def main():
 
                         confirm = st.button('Confirm')
 
-                    if(confirm):
-                        st.success(database_access.extendTimeCost(updatedDT,intCharge,CheckPlate))
-                        st.session_state.input = False
-                        st.session_state.extend = True
-                        st.experimental_rerun()
+                        if(confirm):
+                            st.success(database_access.extendTimeCost(updatedDT,intCharge,CheckPlate))
+                            st.session_state.input = False
+                            st.session_state.extend = True
+                            st.experimental_rerun()
 
-                if(st.session_state.extend):
-                    st.success("Session has been extended")
+                    if(st.session_state.extend):
+                        st.success("Session has been extended")
                     st.session_state.extend = False
 
-            if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
+            if(database_access.noCurrentSess(CheckPlate) == False and len(prevSessDF.index) > 0):
                 with prevSession.container():
                     st.header('Past Sessions')
                     st.dataframe(prevSessDF)
