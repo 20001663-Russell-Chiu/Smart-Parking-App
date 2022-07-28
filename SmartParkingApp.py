@@ -22,13 +22,16 @@ from sklearn import ensemble
 # Importing built-in library for SQLite functionality
 import sqlite3 as sql
 
-
-
 epochTime = datetime.datetime(1970,1,1)
-st.session_state.cardName = ''
-cardNo = ''
-cardCVV = ''
-cardDate = ''
+
+if 'cardName' not in st.session_state:
+    st.session_state['cardName'] = ''
+if 'cardNo' not in st.session_state:
+    st.session_state['cardNo'] = ''
+if 'cardDate' not in st.session_state:
+    st.session_state['cardDate'] = ''
+if 'cardCVV' not in st.session_state:
+    st.session_state['cardCVV'] = ''
 
 #def prediction(model, VehType, startTime, endTime, totalCharge, Duration, effectiveCharge):
 def prediction(model, featureArray):
@@ -164,6 +167,11 @@ def chargeCalc(plateNo, duration, timeNow, SessEndDate):
 
     return intCharge
 
+def return_payment_info():
+    st.session_state['cardName'] = st.session_state['cardName']
+    st.session_state['cardNo'] = st.session_state['cardNo']
+    st.session_state['cardDate'] = st.session_state['cardDate']
+    st.session_state['cardCVV'] = st.session_state['cardCVV']
 
 def main():
     database_access.check_db()
@@ -272,7 +280,7 @@ def main():
         else:
             st.button('Predict',disabled=True)
         
-
+        return_payment_info()
 
     elif(nav == "Sessions"):
         if "input" not in st.session_state:
@@ -325,8 +333,6 @@ def main():
                             st.session_state.input = False
 
 
-                        
-
 
             if(database_access.noCurrentSess(CheckPlate) and len(prevSessDF.index) > 0):
                 st.header('Past Sessions')
@@ -339,9 +345,20 @@ def main():
                 st.text('No parking history found')
             
 
+        return_payment_info()
+
+    elif(nav == "Payment"):
+        with st.form(key='payment_form'):
+            cardName = st.text_input('Cardholder name', value=st.session_state['cardName'], key='cardName')
+            cardNo = st.text_input("Card number", value=st.session_state['cardNo'], key='cardNo')
+            
+            cardDate, cardCVV = st.columns(2)
+            cardDate = cardDate.text_input("Expiry date", value=st.session_state['cardDate'], key='cardDate')
+            cardCVV = cardCVV.text_input("Security code/CVV", value=st.session_state['cardCVV'], key='cardCVV')
+            
+            submit_button = st.form_submit_button(label='Submit')
 #calling the main function
 main()
-
 
 
 
