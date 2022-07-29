@@ -235,40 +235,48 @@ class CardNameError(Exception):
         super().__init__(message)
     
 def validate_payment_info(cardName, cardNo, expiry_date, CVV):
+    # is_validated for determining if inputs are validated
+    # result_list to print out validation messages
     is_validated = True
     result_list = []
-    
-    regex_cardname = '([A-Za-z\\s])+'
-    regex_cardNo = '[0-9]+'
-    regex_expiry_date = ''
-    regex_CVV = ''
 
+    cardNo = cardNo.replace('-', '').replace(' ', '')
+    
+    regex_cardname = '^[A-Za-z][A-Za-z\s]+$'
+    regex_cardNo = ['^4[0-9]{12}(?:[0-9]{3})?$', '^(?:5[1-5][0-9]{2}|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$']
+
+    regex_CVV = '^[0-9]{3,4}$'
+
+    # Validation for card name
     if cardName == '':
         is_validated = False
         result_list.append('Please enter a card name.')
-    elif not re.search(regex_cardname, cardName):
+    elif not re.search(regex_cardname, cardName.strip()):
         is_validated = False
         result_list.append('Your card name must only contain alphabetical characters.')
-    
+
+    # Validation for card number
     if cardNo == '':
         is_validated = False
         result_list.append('Please enter a card cardNo.')
-    elif not re.search(regex_cardNo, cardNo):
+    elif not any([re.search(i_regex, cardNo) for i_regex in regex_cardNo]):
         is_validated = False
         result_list.append('Your card number is invalid.')
 
+    # Validation for expiry date
     if expiry_date == '':
         is_validated = False
         result_list.append('Please enter a card expiry_date.')
-    elif not re.search(regex_expiry_date, expiry_date):
+    elif datetime.date.today() > expiry_date:
         is_validated = False
-        result_list.append('placeholder')
+        result_list.append('Your expiry date cannot be before the current day.')
 
+    # Validation for CVV
     if CVV == '':
         is_validated = False
         result_list.append('Please enter a card CVV.')
-    elif not re.search(regex_CVV, CVV):
+    elif not re.search(regex_CVV, CVV.strip()):
         is_validated = False
-        result_list.append('placeholder')
+        result_list.append('Your CVV is invalid. (CVV is only 3-4 digits long)')
 
     return is_validated, result_list
