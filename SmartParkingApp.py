@@ -28,18 +28,19 @@ def payment_page():
         cardNo = st.text_input("Card number")
 
         cardDate, cardCVV = st.columns(2)
-        cardDate = cardDate.text_input("Expiry date")
+        cardDate = cardDate.date_input("Expiry date", min_value=datetime.date.today())
         cardCVV = cardCVV.text_input("Security code/CVV")
+
+        inputs = (cardName, cardNo, cardDate, cardCVV)
 
         submit_button = st.form_submit_button(label='Submit')
         
         if submit_button:
             # Put code for validating inputs
-            inputs_validated, result_list = validate_payment_info(cardName, cardNo, cardDate, cardCVV)
+            inputs_validated, result_list = validate_payment_info(*inputs)
             
             if inputs_validated:
                 session_paid = True
-                st.write(CheckPlate)
                 database_access.endSession(CheckPlate)
                 st.success('Your payment is successful! You may return to home by clicking the button below.')
             else:
