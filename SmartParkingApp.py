@@ -40,10 +40,20 @@ def payment_page():
             inputs_validated, result_list = validate_payment_info(*inputs)
             
             if inputs_validated:
+                # When inputs are validated, proceed to:
+                # - Display Success Message
+                # - Display Total Cost
+                # - Set session_paid bool to True
+                # - End current session in database (Changing session field "paid" to True)
                 session_paid = True
+                total_cost = st.session_state.total_cost
                 database_access.endSession(CheckPlate)
+
+                # Displaying Messages
+                st.write(f'Total Cost: {total_cost}')
                 st.success('Your payment is successful! You may return to home by clicking the button below.')
             else:
+                # Displays Error Messages for any of the input fields if the user input is invalid
                 for result_msg in result_list:
                     st.error(result_msg)
         
@@ -183,6 +193,7 @@ def main_page_Sessions():
 
                 if(EndSessionButton):
                     st.session_state.endsession_plate = CheckPlate
+                    st.session_state.total_cost = currentSess.Cost[0]
                     st.session_state.runpage = payment_page
                     st.experimental_rerun()
 
