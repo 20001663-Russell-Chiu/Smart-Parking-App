@@ -45,7 +45,7 @@ def payment_page():
             else:
                 for result_msg in result_list:
                     st.error(result_msg)
-
+        
     go_to_main = st.button('Return to Home', disabled=True if not session_paid else False)
     
     if go_to_main:
@@ -90,24 +90,19 @@ def main_page_Home():
 
     duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
 
-    if(duration < 0):
+    if(duration < 0 or duration > 100000):
         error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
         st.markdown(error, unsafe_allow_html=True)
-
-
-    #Calculate session start and end in minutes since Epoch
-    sesStart = round((epochCalc(utctimeNow)),2)
-    sessEnd = (duration*60) + sesStart
-    
-    sesStartDate = datetime.datetime.fromtimestamp((sesStart))
-
-    try: 
-        SessEndDate = datetime.datetime.fromtimestamp((sessEnd))
+    else:
         st.text(str(int(duration/60)) + " hours " + str((duration%60)) + " minutes" )
-    except:
-        error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
-        st.markdown(error, unsafe_allow_html=True)
+        #Calculate session start and end in minutes since Epoch
+        sesStart = round((epochCalc(utctimeNow)),2)
+        sessEnd = (duration*60) + sesStart
+        
+        sesStartDate = datetime.datetime.fromtimestamp((sesStart))
+        SessEndDate = datetime.datetime.fromtimestamp((sessEnd))
 
+    
 
     intCharge = 0
     intCharge = chargeCalc(plateNo, duration, intCharge)       
@@ -120,7 +115,7 @@ def main_page_Home():
     featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
     
 
-    if(plateNo != '' and  regex(plateNo) != 'Invalid' and duration > 0):
+    if(plateNo != '' and  regex(plateNo) != 'Invalid' and duration > 0 and duration < 1000000):
         # Connecting to database
         # prev_session = get_previous_sessions(plateNo) # Uncomment once get_previous_sessions() function is complete
 
@@ -197,12 +192,14 @@ def main_page_Sessions():
                     currentDT = currentSess['Session End'][0]
                     strToDate = datetime.datetime.strptime(currentDT, "%Y/%m/%d, %H:%M")
 
-                    duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)      
-                    try:
+                    duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)   
+
+                    if(duration < 0 or duration > 100000):
+                        error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
+                        st.markdown(error, unsafe_allow_html=True)
+                    else:
                         updatedDT = (strToDate + datetime.timedelta(minutes=duration)).strftime("%Y/%m/%d, %H:%M")
-                        st.text(str(int(duration/60)) + " hours " + str((duration%60)) + " minutes" )  
-                    except:
-                        print('')
+                        st.text(str(int(duration/60)) + " hours " + str((duration%60)) + " minutes" )   
                     
                     intCharge = database_access.getTotalCost(CheckPlate)
 
@@ -210,8 +207,8 @@ def main_page_Sessions():
                         intCharge = round(chargeCalc(CheckPlate, duration, float(intCharge)),2)
                     except:
                         print('')
-
-                    if(duration >= 0):
+    
+                    if(duration >= 0 and duration < 100000):
                         confirm = st.button('Confirm')
                     else:
                         confirm = st.button('Confirm',disabled=True)
@@ -262,3 +259,8 @@ if 'runpage' not in st.session_state:
     st.session_state.runpage()
 else:
     st.session_state.runpage()
+
+
+
+
+
