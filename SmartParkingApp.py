@@ -15,6 +15,7 @@ import os
 
 from validators import card_number
 
+# User-defined functions for additional functionality
 import database_access
 from page_functions import *
 
@@ -22,26 +23,29 @@ def payment_page():
     session_paid = False
     CheckPlate = st.session_state.endsession_plate
 
-    with st.form(key='payment_form', clear_on_submit=True):
-        cardName = st.text_input('Cardholder name', value=st.session_state['cardName'], key='cardName')
-        cardNo = st.text_input("Card number", value=st.session_state['cardNo'], key='cardNo')
+    with st.form(key='payment_form', clear_on_submit=False):
+        cardName = st.text_input('Cardholder name')
+        cardNo = st.text_input("Card number")
 
         cardDate, cardCVV = st.columns(2)
-        cardDate = cardDate.text_input("Expiry date", value=st.session_state['cardDate'], key='cardDate')
-        cardCVV = cardCVV.text_input("Security code/CVV", value=st.session_state['cardCVV'], key='cardCVV')
+        cardDate = cardDate.text_input("Expiry date")
+        cardCVV = cardCVV.text_input("Security code/CVV")
 
         submit_button = st.form_submit_button(label='Submit')
         
         if submit_button:
             # Put code for validating inputs
-            inputs_validated, result_msg = validate_payment_info(cardName, cardNo, cardDate, cardCVV)
+            inputs_validated, result_list = validate_payment_info(cardName, cardNo, cardDate, cardCVV)
             
             if inputs_validated:
                 session_paid = True
                 st.write(CheckPlate)
                 database_access.endSession(CheckPlate)
                 st.success('Your payment is successful! You may return to home by clicking the button below.')
-        
+            else:
+                for result_msg in result_list:
+                    st.error(result_msg)
+
     go_to_main = st.button('Return to Home', disabled=True if not session_paid else False)
     
     if go_to_main:
@@ -254,12 +258,7 @@ def main():
         
 #calling the main function
 if 'runpage' not in st.session_state:
-    st.session_state.runpage = main
+    st.session_state['runpage'] = main
     st.session_state.runpage()
 else:
     st.session_state.runpage()
-
-
-
-
-
