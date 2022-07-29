@@ -178,28 +178,49 @@ def customMsg(msg, wait=3, type_='warning'):
     placeholder.markdown(styledMsg, unsafe_allow_html=True)
     time.sleep(wait)
     placeholder.empty()
+
+class CardNameError(Exception):
+    """Exception raised when Card Name contains non-alphabetical characters."""
+    def __init__(self, name):
+        self.name = name
+        message = f'Your Card Name contains non-alphabetical characters: {self.name}'
+        super().__init__(message)
     
 def validate_payment_info(cardName, cardNo, expiry_date, CVV):
-    is_validated = False
-    result_msg = ''
+    is_validated = True
+    result_list = []
     
-    regex_cardname = '[A-Za-z]+'
+    regex_cardname = '([A-Za-z\\s])+'
+    regex_cardNo = '[0-9]+'
+    regex_expiry_date = ''
+    regex_CVV = ''
 
-    if re.search(regex_cardname, cardName):
-        is_validated = True
-    else:
-        result_msg += ''
-        
-    if not re.search(regex_cardname, cardName):
-        is_validated = True
-        result_msg += ''
-        
-    if not re.search(regex_cardname, cardName):
-        is_validated = True
-        result_msg += ''
-        
-    if not re.search(regex_cardname, cardName):
-        is_validated = True
-        result_msg += ''
+    if cardName == '':
+        is_validated = False
+        result_list.append('Please enter a card name.')
+    elif not re.search(regex_cardname, cardName):
+        is_validated = False
+        result_list.append('Your card name must only contain alphabetical characters.')
+    
+    if cardNo == '':
+        is_validated = False
+        result_list.append('Please enter a card cardNo.')
+    elif not re.search(regex_cardNo, cardNo):
+        is_validated = False
+        result_list.append('Your card number is invalid.')
 
-    return is_validated, result_msg
+    if expiry_date == '':
+        is_validated = False
+        result_list.append('Please enter a card expiry_date.')
+    elif not re.search(regex_expiry_date, expiry_date):
+        is_validated = False
+        result_list.append('placeholder')
+
+    if CVV == '':
+        is_validated = False
+        result_list.append('Please enter a card CVV.')
+    elif not re.search(regex_CVV, CVV):
+        is_validated = False
+        result_list.append('placeholder')
+
+    return is_validated, result_list
