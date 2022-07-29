@@ -1,4 +1,5 @@
 from logging import PlaceHolder
+from turtle import window_width
 import numpy as np
 from sklearn.utils import check_matplotlib_support
 import streamlit as st
@@ -126,7 +127,7 @@ def main_page_Home():
     featureList = [VehType, sesStart, sessEnd, intCharge, duration, effCharge]
     
 
-    if(plateNo != '' and  regex(plateNo) != 'Invalid' and duration > 0 and duration < 1000000):
+    if(plateNo != '' and  regex(plateNo) != 'Invalid' and duration > 0 and duration < 100000):
         # Connecting to database
         # prev_session = get_previous_sessions(plateNo) # Uncomment once get_previous_sessions() function is complete
 

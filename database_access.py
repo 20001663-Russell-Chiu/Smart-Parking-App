@@ -30,8 +30,6 @@ def check_db(): # Progress: Complete
         """)
         con.commit()
         con.close()
-    # else:
-    #     print('Database already exists.')
 
 
 ''' 
@@ -109,7 +107,7 @@ def deleteSessions(plate_number):
     cur = con.cursor()
     
     # Getting previous sessions
-    cur.execute("DELETE FROM sessions WHERE license_number == ?", (plate_number,))
+    cur.execute("DELETE FROM sessions WHERE license_number == ? AND paid == True", (plate_number,))
     
     prev_sessions = cur.fetchall()
 
@@ -150,7 +148,7 @@ def endSession(plate_number):
     cur = con.cursor()
     
     #Update session paid column to true
-    cur.execute("UPDATE sessions SET paid = True WHERE license_number == ?", (plate_number,))
+    cur.execute("UPDATE sessions SET paid = True WHERE license_number == ? AND paid == False", (plate_number,))
 
 
     con.commit()
