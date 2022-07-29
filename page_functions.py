@@ -1,3 +1,4 @@
+from itertools import count
 from logging import PlaceHolder
 import numpy as np
 from sklearn.utils import check_matplotlib_support
@@ -112,22 +113,87 @@ def modelSelect():
         model = pickle.load(open(abs_file_path, 'rb'))
         return model
     
-def durationSelect():
-    #Calculate duration
-    duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
-
-    if(duration < 0):
-        error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
-
-        return st.markdown(error, unsafe_allow_html=True)
-
-    else:
-        return duration
-
 def regex(plateNo):
     pattern = "([SFG][^AIO\d][^AIO\d][0-9]{1,4}[^FINOQVW\W\d])$|([SFG][^AIO\d][0-9]{1,4}[^FINOQVW\W\d])$|(J[^AIO\d][0-9]{1,4})$|(J[^AIO\d][^AIO\d][0-9]{1,4})$"
+    strPattern = '[A-Za-z]'
+
+    split = list(plateNo)
+    LetterList = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+
+    checksum_list = ['A', 'Z', 'Y', 'X', 'U', 'T', 'S', 'R', 'P', 'M', 'L', 'K', 'J', 'H', 'G', 'E', 'D', 'C', 'B']
+    csLetter = split[len(split)-1]
+    
+    countofNo = 0
+    countofStr = 0
+
     if(re.search(pattern, plateNo)):
-        return 'Valid'
+        for i in range(len(split)-1):
+            if(re.search(strPattern, split[i])):   
+                countofStr += 1
+            else:
+                countofNo +=1
+        
+        if(countofStr == 3):
+            prefix1 = LetterList.index(split[1]) + 1
+            prefix2 = LetterList.index(split[2]) + 1
+            if(countofNo == 1):
+                no1 = 0
+                no2 = 0
+                no3 = 0
+                no4 = int(split[3])
+            elif(countofNo == 2):
+                no1 = 0
+                no2 = 0
+                no3 = int(split[3])
+                no4 = int(split[4])
+            elif(countofNo == 3):
+                no1 = 0
+                no2 = int(split[3])
+                no3 = int(split[4])
+                no4 = int(split[5])
+            else:
+                no1 = int(split[3])
+                no2 = int(split[4])
+                no3 = int(split[5])
+                no4 = int(split[6])
+
+
+
+        elif(countofStr == 2):
+            prefix1 = LetterList.index(split[0]) + 1
+            prefix2 = LetterList.index(split[1]) + 1
+
+            if(countofNo == 1):
+                no1 = 0
+                no2 = 0
+                no3 = 0
+                no4 = int(split[2])
+
+            elif(countofNo == 2):
+                no1 = 0
+                no2 = 0
+                no3 = int(split[2])
+                no4 = int(split[3])
+
+            elif(countofNo == 3):
+                no1 = 0
+                no2 = int(split[2])
+                no3 = int(split[3])
+                no4 = int(split[4])
+            else:    
+                no1 = int(split[2])
+                no2 = int(split[3])
+                no3 = int(split[4])
+                no4 = int(split[5])
+
+        total = ((prefix1 * 9) + (prefix2 * 4) + (no1 * 5) + (no2 * 4) + (no3 * 3) + (no4 * 2))%19
+        csChecker = checksum_list[total]
+
+        if(csChecker == csLetter):
+            return 'Valid'
+        else:
+            return 'Invalid'
+
     else:   
         return 'Invalid'
 
@@ -144,15 +210,8 @@ def epochCalc(dateTime):
     inSeconds = daySeconds + endEpoch.seconds
     return inSeconds
 
-def time_in_range(start, end, current):
-    #Returns whether current is in the range [start, end]
-    return start <= current <= end 
 
 def chargeCalc(plateNo, duration, intCharge):
-    # strtimeNow = datetime.datetime.strftime(timeNow,"%Y/%m/%d, %H:%M")
-    # DTtimeNow = datetime.datetime.strptime(strtimeNow,"%Y/%m/%d, %H:%M")
-
-
     if(str(plateNo).startswith('J') or str(plateNo).startswith('S')):
         intCharge += 0.6 * int((duration/30))
 
@@ -167,17 +226,6 @@ def chargeCalc(plateNo, duration, intCharge):
 
     return intCharge
 
-def customMsg(msg, wait=3, type_='warning'):
-    placeholder = st.empty()
-    styledMsg = f'\
-        <div class="element-container" style="width: 693px;">\
-            <div class="alert alert-{type_} stAlert" style="width: 693px;">\
-                <div class="markdown-text-container">\
-                    <p>{msg}</p></div></div></div>\
-    '
-    placeholder.markdown(styledMsg, unsafe_allow_html=True)
-    time.sleep(wait)
-    placeholder.empty()
 
 class CardNameError(Exception):
     """Exception raised when Card Name contains non-alphabetical characters."""
