@@ -244,7 +244,6 @@ def validate_payment_info(cardName, cardNo, expiry_date, CVV):
     
     regex_cardname = '^[A-Za-z][A-Za-z\s]+$'
     regex_cardNo = ['^4[0-9]{12}(?:[0-9]{3})?$', '^(?:5[1-5][0-9]{2}|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)[0-9]{12}$']
-
     regex_CVV = '^[0-9]{3,4}$'
 
     # Validation for card name
@@ -266,11 +265,25 @@ def validate_payment_info(cardName, cardNo, expiry_date, CVV):
     # Validation for expiry date
     if expiry_date == '':
         is_validated = False
-        result_list.append('Please enter a card expiry_date.')
-    elif datetime.date.today() > expiry_date:
-        is_validated = False
-        result_list.append('Your expiry date cannot be before the current day.')
+        result_list.append('Please enter a card expiry date.')
+    else:
+        if not re.search('\\d{2}/\\d{2}', expiry_date):
+            is_validated = False
+            result_list.append('Your expiry date format must be in MM/YY.')
+        else:
+            expiry_date_list = list(map(int, expiry_date.split('/')))
+            current_month = datetime.date.today().month
+            current_year = int(str(datetime.date.today().year)[-2:])
 
+            if expiry_date_list[0] < current_month:
+                is_validated = False
+                result_list.append('Your expiry month must be equal or later than the current month.')
+            elif expiry_date_list[1] < current_year:
+                is_validated = False
+                result_list.append('Your expiry year must be equal or later than the current year.')
+
+
+# mm_yy[0] < datetime.date.today().month
     # Validation for CVV
     if CVV == '':
         is_validated = False

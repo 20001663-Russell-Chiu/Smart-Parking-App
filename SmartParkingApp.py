@@ -19,16 +19,15 @@ import database_access
 from page_functions import *
 
 def payment_page():
-    session_paid = False
     CheckPlate = st.session_state.endsession_plate
 
     with st.form(key='payment_form', clear_on_submit=False):
-        cardName = st.text_input('Cardholder name')
-        cardNo = st.text_input("Card number")
+        cardName = st.text_input('Cardholder name', placeholder='Enter your name')
+        cardNo = st.text_input("Card number", placeholder='Enter a VISA/Mastercard card number')
 
         cardDate, cardCVV = st.columns(2)
-        cardDate = cardDate.date_input("Expiry date", min_value=datetime.date.today())
-        cardCVV = cardCVV.text_input("Security code/CVV")
+        cardDate = cardDate.text_input("Expiry date", placeholder="MM/YY")
+        cardCVV = cardCVV.text_input("Security code/CVV", placeholder='Enter your CVV')
 
         inputs = (cardName, cardNo, cardDate, cardCVV)
 
@@ -42,21 +41,19 @@ def payment_page():
                 # When inputs are validated, proceed to:
                 # - Display Success Message
                 # - Display Total Cost
-                # - Set session_paid bool to True
                 # - End current session in database (Changing session field "paid" to True)
-                session_paid = True
                 total_cost = st.session_state.total_cost
                 database_access.endSession(CheckPlate)
 
                 # Displaying Messages
                 st.write(f'Total Cost: {total_cost}')
-                st.success('Your payment is successful! You may return to home by clicking the button below.')
+                st.success('Your payment is successful! You may return to menu.')
             else:
                 # Displays Error Messages for any of the input fields if the user input is invalid
                 for result_msg in result_list:
                     st.error(result_msg)
         
-    go_to_main = st.button('Return to Home', disabled=True if not session_paid else False)
+    go_to_main = st.button('Return to Menu')
     
     if go_to_main:
         st.session_state.runpage = main
