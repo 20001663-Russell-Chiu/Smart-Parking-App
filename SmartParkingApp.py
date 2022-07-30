@@ -1,5 +1,3 @@
-from logging import PlaceHolder
-from turtle import window_width
 import numpy as np
 from sklearn.utils import check_matplotlib_support
 import streamlit as st
