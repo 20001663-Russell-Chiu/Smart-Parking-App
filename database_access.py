@@ -1,6 +1,8 @@
 import os
 import sqlite3 as sql
 
+#All Functions for our database
+
 # Establishing name of database
 database_name = 'parking.db'
 
@@ -194,3 +196,4 @@ def getTotalCost(plate_number):
     con.close()
     
     return cost
+
