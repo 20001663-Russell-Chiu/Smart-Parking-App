@@ -91,6 +91,7 @@ def main_page_Home():
 
     duration = st.number_input("Enter parking duration in minutes: ",value=30,step=30)
 
+    #set a minimum and maximum valid limit for duration
     if(duration < 0 or duration > 100000):
         error = '<p style="font-family:sans-serif; color:Red; font-size: 12px;">Invalid duration</p>'
         st.markdown(error, unsafe_allow_html=True)
@@ -158,14 +159,14 @@ def main_page_Sessions():
     currentSession =  st.empty()
     prevSession = st.empty()
 
-
+    #Initializes the prevSessDF variable which stores the dataframe of any previous sessions
     if(CheckPlate != ''):
         prevSess = database_access.get_previous_sessions(CheckPlate)
         prevSessDF = pd.DataFrame(prevSess, columns = ['License plate', 'Session Start', 'Session End', 'Cost', 'Lot number'])
         prevSessDF.Cost = "$" + prevSessDF['Cost'].round(decimals = 2).map(str)  
         
 
-
+        #If there is a current session, display it and include end session and extend session widgets
         if(database_access.noCurrentSess(CheckPlate) == False):       
             with currentSession.container():
                 st.header('Current session')
@@ -174,18 +175,21 @@ def main_page_Sessions():
                 currentSess.Cost = "$" + str(round(currentSess.Cost[0],2))
                 st.dataframe(currentSess)
 
+                #Putting the 2 buttons into a column
                 EndSessionButton, extendSession = st.columns([1,1])
 
                 EndSessionButton = EndSessionButton.button('End session')
 
                 extendSession = extendSession.button('Extend session')
 
+                #If end session button is clicked, redirect to payment page
                 if(EndSessionButton):
                     st.session_state.endsession_plate = CheckPlate
                     st.session_state.total_cost = currentSess.Cost[0]
                     st.session_state.runpage = payment_page
                     st.experimental_rerun()
 
+                #if extendSession is clicked, session state will be set to true to ensure that the page does not refresh upon changing duration
                 if(extendSession):
                     st.session_state.input = True
 
@@ -224,6 +228,7 @@ def main_page_Sessions():
                     st.success("Session has been extended")
                 st.session_state.extend = False
 
+        #If there are items in the prevsessDF, display it along with a button to clear the history
         if(len(prevSessDF.index) > 0):
             with prevSession.container():
                 st.header('Past Sessions')

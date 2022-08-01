@@ -108,7 +108,7 @@ def deleteSessions(plate_number):
     # Note: All SQL commands are done with the cursor object.
     cur = con.cursor()
     
-    # Getting previous sessions
+    #Function to be called when user clears history, it will delete all rows where it is the license number and where paid is true
     cur.execute("DELETE FROM sessions WHERE license_number == ? AND paid == True", (plate_number,))
     
     prev_sessions = cur.fetchall()
@@ -204,7 +204,7 @@ def conflictingLots(lotNumber):
     # Note: All SQL commands are done with the cursor object.
     cur = con.cursor()
     
-    #Selects any current active session with matching lot number
+    #Selects any current active session with matching lot number 
     cur.execute("SELECT * FROM sessions WHERE paid == False AND lot_number == ?", (lotNumber,))
     
     lots = cur.fetchall()

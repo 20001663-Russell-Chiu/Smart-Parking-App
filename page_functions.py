@@ -293,10 +293,12 @@ def validate_payment_info(cardName, cardNo, expiry_date, CVV):
 
     return is_validated, result_list
 
+
 def lotNumGen(range1,range2):
     lotNumber =  random.randint(range1,range2)
     conflicting = database_access.conflictingLots(lotNumber)
 
+    #If conflicting is returned true, means there is another active session with the lot number, so regenerate a brand new lot number again
     if(conflicting):
         lotNumber =  random.randint(range1,range2)
 
