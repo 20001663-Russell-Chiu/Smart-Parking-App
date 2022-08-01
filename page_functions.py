@@ -267,15 +267,17 @@ def validate_payment_info(cardName, cardNo, expiry_date, CVV):
             result_list.append('Your expiry date format must be in MM/YY.')
         else:
             expiry_date_list = list(map(int, expiry_date.split('/')))
+            card_month = expiry_date_list[0]
+            card_year = expiry_date_list[1]
             current_month = datetime.date.today().month
             current_year = int(str(datetime.date.today().year)[-2:])
-            if expiry_date_list[0] > 12:
+            if card_month > 12:
                 is_validated = False
                 result_list.append('Your expiry month is invalid.')
-            elif expiry_date_list[0] < current_month:
+            elif card_month < current_month and card_year == current_year:
                 is_validated = False
                 result_list.append('Your expiry month must be equal or later than the current month.')
-            elif expiry_date_list[1] < current_year:
+            elif card_year < current_year:
                 is_validated = False
                 result_list.append('Your expiry year must be equal or later than the current year.')
 
