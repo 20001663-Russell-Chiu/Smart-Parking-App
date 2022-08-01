@@ -92,12 +92,12 @@ def get_current_session(plate_number): # Progress: Complete
     # Getting current sessions if any
     cur.execute("SELECT license_number, session_start, session_end, session_cost, lot_number FROM sessions WHERE license_number == ? AND paid == False", (plate_number,))
     
-    prev_sessions = cur.fetchall()
+    current_sess = cur.fetchall()
 
     con.commit()
     con.close()
     
-    return prev_sessions
+    return current_sess
 
 
 def deleteSessions(plate_number):
@@ -197,3 +197,24 @@ def getTotalCost(plate_number):
     
     return cost
 
+def conflictingLots(lotNumber):
+    con = sql.connect(database_name) 
+    
+    # Create a cursor object to access table
+    # Note: All SQL commands are done with the cursor object.
+    cur = con.cursor()
+    
+    #Selects any current active session with matching lot number
+    cur.execute("SELECT * FROM sessions WHERE paid == False AND lot_number == ?", (lotNumber,))
+    
+    lots = cur.fetchall()
+
+    if(len(lots) > 0):
+        conflicting = True
+    else:
+        conflicting = False
+
+    con.commit()
+    con.close()
+    
+    return conflicting

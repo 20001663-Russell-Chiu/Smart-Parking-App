@@ -1,17 +1,10 @@
-from itertools import count
-from logging import PlaceHolder
 import numpy as np
 from sklearn.utils import check_matplotlib_support
 import streamlit as st
 from streamlit_option_menu import option_menu
-import sklearn
 import datetime
-import time
-import pytz
 import pickle
 import re # for regex
-import random
-import pandas as pd
 import os
 
 from validators import card_number
@@ -21,6 +14,8 @@ import database_access
 from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import accuracy_score
 from sklearn import ensemble
+
+import random
 
 # Importing built-in library for SQLite functionality
 import sqlite3 as sql
@@ -295,3 +290,12 @@ def validate_payment_info(cardName, cardNo, expiry_date, CVV):
         result_list.append('Your CVV is invalid. (CVV is only 3-4 digits long)')
 
     return is_validated, result_list
+
+def lotNumGen(range1,range2):
+    lotNumber =  random.randint(range1,range2)
+    conflicting = database_access.conflictingLots(lotNumber)
+
+    if(conflicting):
+        lotNumber =  random.randint(range1,range2)
+
+    return lotNumber

@@ -1,16 +1,10 @@
-import numpy as np
 from sklearn.utils import check_matplotlib_support
 import streamlit as st
 from streamlit_option_menu import option_menu
-import sklearn
 import datetime
-import time
-import pytz
-import pickle
-import re # for regex
 import random
 import pandas as pd
-import os
+
 
 from validators import card_number
 
@@ -123,22 +117,21 @@ def main_page_Home():
     
 
     if(plateNo != '' and  regex(plateNo) != 'Invalid' and duration > 0 and duration < 100000):
-        # Connecting to database
-        # prev_session = get_previous_sessions(plateNo) # Uncomment once get_previous_sessions() function is complete
-
         if(st.button('Predict',disabled=False)):
             if(database_access.noCurrentSess(plateNo)):           
                 pred = prediction(model, featureList)
                 st.success(pred)
                 #st.text("For troubleshooting purpose:" + "\nVehType: " + str(VehType) + "\nSession start: " + str(sesStart) + "\nSession End: " + str(sessEnd) + "\nTotal charge: " + str(intCharge) + "\nDuration: " + str(duration) + "\nEffective charge: " + str(effCharge))
-                
+
                 #Depending on model prediction, will assign a lot number to user
-                if(pred == 'Short term parking'):
-                    lotNumber =  random.randint(161,480)
+                if(VehType == 1):
+                    lotNumGen(481,500)
+                    
                 elif(pred == 'Seasonal parking'):
-                    lotNumber =  random.randint(1,161)
-                elif(VehType == 1):
-                    lotNumber =  random.randint(481,500)
+                    lotNumGen(1,160)
+
+                elif(pred == 'Short term parking'):
+                    lotNumGen(161,480)
 
                 sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), effCharge ,lotNumber, False]
                 database_access.add_session(sessionDeet)
