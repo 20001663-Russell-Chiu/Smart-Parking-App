@@ -126,13 +126,13 @@ def main_page_Home():
 
                 #Depending on model prediction, will assign a lot number to user
                 if(VehType == 1):
-                    lotNumGen(481,500)
+                    lotNumber = lotNumGen(481,500)
                     
                 elif(pred == 'Seasonal parking'):
-                    lotNumGen(1,160)
+                    lotNumber = lotNumGen(1,160)
 
                 elif(pred == 'Short term parking'):
-                    lotNumGen(161,480)
+                    lotNumber = lotNumGen(161,480)
 
                 sessionDeet = [plateNo, sesStartDate.strftime("%Y/%m/%d, %H:%M"), SessEndDate.strftime("%Y/%m/%d, %H:%M"), effCharge ,lotNumber, False]
                 database_access.add_session(sessionDeet)
