@@ -91,7 +91,7 @@ def modelSelect():
         return model
 
     elif(option == "Naive Bayes"):
-        rel_path = "pkl folder/NaiveBayes_pkl_Final.pkl"
+        rel_path = "pkl folder/NaiveBayes_pkl_Final2.pkl"
         abs_file_path = os.path.join(script_dir, rel_path)
         model = pickle.load(open(abs_file_path, 'rb'))
         return model
