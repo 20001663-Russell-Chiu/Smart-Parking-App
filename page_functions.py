@@ -221,14 +221,6 @@ def chargeCalc(plateNo, duration, intCharge):
 
     return intCharge
 
-
-class CardNameError(Exception):
-    """Exception raised when Card Name contains non-alphabetical characters."""
-    def __init__(self, name):
-        self.name = name
-        message = f'Your Card Name contains non-alphabetical characters: {self.name}'
-        super().__init__(message)
-    
 def validate_payment_info(cardName, cardNo, expiry_date, CVV):
     # is_validated for determining if inputs are validated
     # result_list to print out validation messages
