@@ -1,4 +1,3 @@
-from sklearn.utils import check_matplotlib_support
 import streamlit as st
 from streamlit_option_menu import option_menu
 import datetime
